@@ -8,6 +8,7 @@ from django.contrib.admin.utils import display_for_field, display_for_value
 from jsonfield import JSONField
 
 from . import models
+from .utils import warn_about_unregistered_in_admin_models
 
 
 def custom_display_for_JSONfield(value, field, empty_value_display):
@@ -561,3 +562,7 @@ class UsageRecordAdmin(StripeModelAdmin):
 @admin.register(models.UsageRecordSummary)
 class UsageRecordSummaryAdmin(StripeModelAdmin):
     list_display = ("invoice", "subscription_item", "total_usage")
+
+
+# run warnings after all models have been registered
+warn_about_unregistered_in_admin_models()
