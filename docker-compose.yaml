@@ -26,14 +26,16 @@ services:
     #   # - MYSQL_PASSWORD=random_number
     #   - MYSQL_ROOT_PASSWORD=random_number
 
-# TODO Perhaps add an entrypoint that doesn't start runserver until a connection cannot be established with the db
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     command: poetry run python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - "8000:8000"
+      - "5678:5678"
     depends_on:
       - db
     environment:
