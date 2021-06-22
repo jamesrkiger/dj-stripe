@@ -246,7 +246,7 @@ class TestApplicationFeeRefund(AssertStripeFksMixin, TestCase):
     )
     @patch(
         "stripe.ApplicationFee.retrieve_refund",
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
         return_value=deepcopy(FAKE_APPLICATION_FEE_REFUND),
     )
     def test_api_retrieve(
@@ -285,7 +285,7 @@ class TestApplicationFeeRefund(AssertStripeFksMixin, TestCase):
     )
     @patch(
         "stripe.ApplicationFee.create_refund",
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
         return_value=deepcopy(FAKE_APPLICATION_FEE_REFUND),
     )
     def test__api_create(
@@ -303,7 +303,7 @@ class TestApplicationFeeRefund(AssertStripeFksMixin, TestCase):
 
     @patch(
         "stripe.ApplicationFee.list_refunds",
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     def test_api_list(
         self,

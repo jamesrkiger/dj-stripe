@@ -101,7 +101,7 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
     )
     @patch(
         "stripe.Transfer.retrieve_reversal",
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
         return_value=deepcopy(FAKE_TRANSFER_REVERSAL),
     )
     def test_api_retrieve(
@@ -131,7 +131,7 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
     )
     @patch(
         "stripe.Transfer.create_reversal",
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
         return_value=deepcopy(FAKE_TRANSFER_REVERSAL),
     )
     def test__api_create(self, transfer_reversal_create_mock, transfer_get_mock):
@@ -143,7 +143,9 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
             api_key=djstripe_settings.STRIPE_SECRET_KEY,
         )
 
-    @patch("stripe.Transfer.list_reversals", autospec=True)
+    @patch(
+        "stripe.Transfer.list_reversals", autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED
+    )
     def test_api_list(self, transfer_reversal_list_mock):
         p = PropertyMock(return_value=deepcopy(FAKE_TRANSFER_REVERSAL))
         type(transfer_reversal_list_mock).auto_paging_iter = p
