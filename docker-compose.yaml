@@ -53,7 +53,7 @@ services:
         - DJSTRIPE_TEST_WEBHOOK_SECRET=whsec_o8p5hmW6JjYjQGENVLlLi9dlAr55QeKQ
 
   stripe:
-    image: stripe/stripe-cli:v1.6.0
+    image: stripe/stripe-cli:v1.6.4
     command: listen --forward-to http://web:8000/djstripe/webhook/
     depends_on:
       - web

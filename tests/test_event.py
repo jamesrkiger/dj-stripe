@@ -162,6 +162,11 @@ class EventRaceConditionTest(TestCase):
         autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     def test_process_event_race_condition(

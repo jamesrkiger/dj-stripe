@@ -48,6 +48,11 @@ class TestTransferStr:
         autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
+    @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
         autospec=True,
@@ -85,6 +90,11 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
         autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
+    @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
         autospec=True,
@@ -114,6 +124,11 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
         self.assert_fks(transfer, expected_blank_fks="")
 
     @patch.object(Transfer, "_attach_objects_post_save_hook")
+    @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),

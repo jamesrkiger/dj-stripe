@@ -727,6 +727,15 @@ class Invoice(BaseInvoice):
     Stripe documentation: https://stripe.com/docs/api/python#invoices
     """
 
+    expand_fields = [
+        "charge",
+        "customer",
+        "default_payment_method",
+        "default_source",
+        "payment_intent",
+        "subscription",
+    ]
+
     default_source = PaymentMethodForeignKey(
         on_delete=models.SET_NULL,
         null=True,
@@ -886,6 +895,7 @@ class InvoiceItem(StripeModel):
     """
 
     stripe_class = stripe.InvoiceItem
+    expand_fields = ["customer", "invoice", "subscription"]
 
     amount = StripeDecimalCurrencyAmountField(help_text="Amount invoiced (as decimal).")
     currency = StripeCurrencyCodeField()
@@ -1029,7 +1039,7 @@ class Plan(StripeModel):
     """
 
     stripe_class = stripe.Plan
-    expand_fields = ["tiers"]
+    expand_fields = ["tiers", "product"]
     stripe_dashboard_item_name = "plans"
 
     active = models.BooleanField(
@@ -1259,6 +1269,15 @@ class Subscription(StripeModel):
     """
 
     stripe_class = stripe.Subscription
+    # TODO Need to replace subscription.expand_fields fields with their json in all the mocks because right now there is just the id.
+    expand_fields = [
+        "customer",
+        "default_payment_method",
+        "default_source",
+        "pending_setup_intent",
+        "schedule",
+    ]
+    # ! see how to get plan.
     stripe_dashboard_item_name = "subscriptions"
 
     application_fee_percent = StripePercentField(
@@ -1734,6 +1753,7 @@ class SubscriptionSchedule(StripeModel):
     """
 
     stripe_class = stripe.SubscriptionSchedule
+    expand_fields = ["customer"]
 
     billing_thresholds = JSONField(
         null=True,
@@ -1810,6 +1830,7 @@ class TaxId(StripeModel):
     """
 
     stripe_class = stripe.TaxId
+    expand_fields = ["customer"]
     description = None
     metadata = None
 
@@ -1933,6 +1954,9 @@ class TaxRate(StripeModel):
 
 
 # TODO Add Tests
+# todo turns out UsageRecord and UsageRecordSummary are different object! with
+# todo different ids and fields etc!
+# todo One idea would be to store the 2 separately. Another one would be to map the summary to this object because there is no way to retrieve a usage object anyway.
 class UsageRecord(StripeModel):
     """
     Usage records allow you to continually report usage and metrics to
@@ -1954,3 +1978,93 @@ class UsageRecord(StripeModel):
         related_name="usage_records",
         help_text="The subscription item this usage record contains data for.",
     )
+
+    # timestamp = StripeDateTimeField(
+    #     help_text="The timestamp for the usage event. This timestamp must be within the current billing period of the subscription of the provided subscription_item.",
+    # )
+
+    # action = StripeEnumField(
+    #     enum=enums.UsageAction,
+    #     default=enums.UsageAction.increment,
+    #     help_text="When using increment the specified quantity will be added to the usage at the specified timestamp. The set action will overwrite the usage quantity at that timestamp. If the subscription has billing thresholds, increment is the only allowed value.",
+    # )
+
+
+# class UsageRecordSummary(StripeModel):
+#     """
+#     Usage record summaries provides usage information that’s been summarized
+#     from multiple usage records and over a subscription billing period
+#     (e.g., 15 usage records in the month of September).
+#     Since new usage records can still be added, the returned summary information for the subscription item’s ID
+#     should be seen as unstable until the subscription billing period ends.
+
+#     Stripe documentation: https://stripe.com/docs/api/usage_records/subscription_item_summary_list
+#     """
+
+#     stripe_class = stripe.UsageRecordSummary
+
+#     invoice = StripeForeignKey(
+#         "Invoice", on_delete=models.CASCADE, related_name="usage_record_summaries"
+#     )
+
+#     # period
+
+#     total_usage = models.PositiveIntegerField(
+#         help_text=(
+#             "The quantity of the plan to which the customer should be subscribed."
+#         )
+#     )
+#     subscription_item = StripeForeignKey(
+#         "SubscriptionItem",
+#         on_delete=models.CASCADE,
+#         related_name="usage_record_summaries",
+#         help_text="The subscription item this usage record contains data for.",
+#     )
+
+#     timestamp = StripeDateTimeField(
+#         help_text="The timestamp for the usage event. This timestamp must be within the current billing period of the subscription of the provided subscription_item.",
+#     )
+
+
+#     @classmethod
+#     def api_list(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
+#         """
+#         Call the stripe API's list operation for this model.
+
+#         :param api_key: The api key to use for this request. \
+#             Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+#         :type api_key: string
+
+#         See Stripe documentation for accepted kwargs for each object.
+
+#         :returns: an iterator over all items in the query
+#         """
+#         return cls.stripe_class.list_usage_record_summaries(
+#             api_key=api_key, **kwargs
+#         ).auto_paging_iter()
+
+# @classmethod
+# def is_valid_object(cls, data):
+#     """
+#     Returns whether the data is a valid object for the class
+#     """
+#     return "object" in data and data["object"] == "usage_record_summary"
+
+
+# from stripe.api_resources.subscription_item
+# # TODO Stripe doesn't allow one to delete or update a usage record after it has been created.
+# # disable _api_delete and _api_update ops
+
+
+# # tODO Check the above for transfer reversal object as well.
+# @classmethod
+# def _api_create(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
+#     """
+#     Call the stripe API's create operation for this model.
+
+#     :param api_key: The api key to use for this request. \
+#         Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+#     :type api_key: string
+#     """
+
+#     return cls.stripe_class.create_usage_record(api_key=api_key, **kwargs)

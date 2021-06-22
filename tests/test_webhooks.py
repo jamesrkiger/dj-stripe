@@ -94,6 +94,11 @@ class TestWebhook(TestCase):
         autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch(
@@ -332,6 +337,11 @@ class TestWebhook(TestCase):
         autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch("stripe.Event.retrieve", autospec=True)
@@ -357,6 +367,11 @@ class TestWebhook(TestCase):
 
     @override_settings(DJSTRIPE_WEBHOOK_SECRET="")
     @patch.object(Transfer, "_attach_objects_post_save_hook")
+    @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
+    )
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),

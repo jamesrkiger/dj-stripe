@@ -129,6 +129,7 @@ class Command(BaseCommand):
                 )
 
         except Exception as e:
+            # raise
             self.stderr.write(str(e))
 
     # todo Handle syncing data for connected accounts as well. # https://stripe.com/docs/api/accounts/list
@@ -155,7 +156,6 @@ class Command(BaseCommand):
                 {"customer": stripe_customer.id, "type": "card", **all_list_kwargs[0]}
                 for stripe_customer in models.Customer.api_list()
             ]
-
         elif model is models.SubscriptionItem:
             all_list_kwargs = [
                 {"subscription": subscription.id, **all_list_kwargs[0]}
@@ -190,7 +190,6 @@ class Command(BaseCommand):
                     subscription=subscription.id
                 )
             ]
-
         elif not all_list_kwargs:
             all_list_kwargs.append({})
 

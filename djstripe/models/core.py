@@ -97,7 +97,16 @@ class Charge(StripeModel):
     """
 
     stripe_class = stripe.Charge
-    expand_fields = ["balance_transaction"]
+    # expand_fields = [
+    #     "balance_transaction",
+    #     "customer",
+    #     "invoice",
+    #     "payment_intent",
+    #     "application_fee",
+    #     "on_behalf_of",
+    #     "source_transfer",
+    #     "transfer",
+    # ]
     stripe_dashboard_item_name = "payments"
 
     amount = StripeDecimalCurrencyAmountField(help_text="Amount charged (as decimal).")
@@ -596,7 +605,14 @@ class Customer(StripeModel):
     """
 
     stripe_class = stripe.Customer
-    expand_fields = ["default_source", "sources"]
+    # expand_fields = ["default_source", "sources"]
+    # ! If both customer and payment method refer each other in their expand fields we will get an infiinite sync case
+    expand_fields = [
+        "default_source",
+        "sources",
+        "invoice_settings.default_payment_method",
+    ]
+
     stripe_dashboard_item_name = "customers"
 
     address = JSONField(null=True, blank=True, help_text="The customer's address.")
@@ -1582,7 +1598,7 @@ class FileLink(StripeModel):
     """
 
     stripe_class = stripe.FileLink
-
+    expand_fields = ["file"]
     expires_at = StripeDateTimeField(
         null=True, blank=True, help_text="Time at which the link expires."
     )
@@ -1599,6 +1615,7 @@ class PaymentIntent(StripeModel):
     """
 
     stripe_class = stripe.PaymentIntent
+    # expand_fields = ["customer", "payment_method", "on_behalf_of"]
     stripe_dashboard_item_name = "payments"
 
     amount = StripeQuantumCurrencyAmountField(
@@ -1842,6 +1859,7 @@ class SetupIntent(StripeModel):
     """
 
     stripe_class = stripe.SetupIntent
+    expand_fields = ["customer", "payment_method", "on_behalf_of"]
 
     application = models.CharField(
         max_length=255,
@@ -1950,7 +1968,11 @@ class Payout(StripeModel):
     Stripe documentation: https://stripe.com/docs/api#payouts
     """
 
-    expand_fields = ["destination"]
+    expand_fields = [
+        "destination",
+        "balance_transaction",
+        "failure_balance_transaction",
+    ]
     stripe_class = stripe.Payout
     stripe_dashboard_item_name = "payouts"
 
@@ -2075,7 +2097,7 @@ class Price(StripeModel):
     """
 
     stripe_class = stripe.Price
-    expand_fields = ["tiers"]
+    expand_fields = ["tiers", "product"]
     stripe_dashboard_item_name = "prices"
 
     active = models.BooleanField(
@@ -2269,6 +2291,7 @@ class Refund(StripeModel):
     """
 
     stripe_class = stripe.Refund
+    expand_fields = ["charge", "balance_transaction", "failure_balance_transaction"]
 
     amount = StripeQuantumCurrencyAmountField(help_text="Amount, in cents.")
     balance_transaction = StripeForeignKey(

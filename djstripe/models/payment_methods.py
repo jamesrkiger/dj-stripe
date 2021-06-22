@@ -655,6 +655,7 @@ class PaymentMethod(StripeModel):
 
     stripe_class = stripe.PaymentMethod
     description = None
+    expand_fields = ["customer"]
 
     billing_details = JSONField(
         help_text=(

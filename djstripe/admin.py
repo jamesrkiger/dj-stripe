@@ -8,6 +8,9 @@ from django.contrib.admin.utils import display_for_field, display_for_value
 from jsonfield import JSONField
 
 from . import models
+from .utils import warn_about_unregistered_in_admin_models
+
+# TODO Register all models setup so far
 
 
 def custom_display_for_JSONfield(value, field, empty_value_display):

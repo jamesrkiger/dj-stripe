@@ -23,8 +23,6 @@ class Command(BaseCommand):
             count += 1
             perc = int(round(100 * (float(count) / float(total))))
             print(
-                "[{0}/{1} {2}%] Syncing {3} [{4}]".format(
-                    count, total, perc, subscriber.email, subscriber.pk
-                )
+                f"[{count}/{total} {perc}%] Syncing {subscriber.email} [{subscriber.pk}]"
             )
             sync_subscriber(subscriber)
