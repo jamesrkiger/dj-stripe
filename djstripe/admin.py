@@ -8,6 +8,9 @@ from django.contrib.admin.utils import display_for_field, display_for_value
 from jsonfield import JSONField
 
 from . import models
+from .utils import warn_about_unregistered_in_admin_models
+
+# TODO Register all models setup so far
 
 
 def custom_display_for_JSONfield(value, field, empty_value_display):
@@ -362,6 +365,12 @@ class FileAdmin(StripeModelAdmin):
     search_fields = ("filename",)
 
 
+@admin.register(models.FileLink)
+class FileLinkAdmin(StripeModelAdmin):
+    list_display = ("url",)
+    list_filter = ("expires_at",)
+
+
 @admin.register(models.PaymentIntent)
 class PaymentIntentAdmin(StripeModelAdmin):
     list_display = (
@@ -519,3 +528,13 @@ class TaxRateAdmin(StripeModelAdmin):
 @admin.register(models.Transfer)
 class TransferAdmin(StripeModelAdmin):
     list_display = ("amount", "description")
+
+
+@admin.register(models.TransferReversal)
+class TransferReversalAdmin(StripeModelAdmin):
+    list_display = ("amount", "transfer")
+
+
+# warn about unregistered models in admin.
+# ! need to run after all registrations
+warn_about_unregistered_in_admin_models()

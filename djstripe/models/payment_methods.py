@@ -656,6 +656,7 @@ class PaymentMethod(StripeModel):
 
     stripe_class = stripe.PaymentMethod
     description = None
+    expand_fields = ["customer"]
 
     billing_details = JSONField(
         help_text=(
@@ -764,7 +765,10 @@ class PaymentMethod(StripeModel):
 
     def _attach_objects_hook(self, cls, data, current_ids=None):
         customer = None
-        if current_ids is None or data.get("customer") not in current_ids:
+        # "customer" key could be like "cus_6lsBvm5rJ0zyHc" or {"id": "cus_6lsBvm5rJ0zyHc"}
+        customer_id = cls._id_from_data(data.get("customer"))
+
+        if current_ids is None or customer_id not in current_ids:
             customer = cls._stripe_object_to_customer(
                 target_cls=Customer, data=data, current_ids=current_ids
             )

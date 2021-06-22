@@ -966,6 +966,11 @@ class TestCustomerEvents(EventTestCase):
 
 class TestDisputeEvents(EventTestCase):
     @patch(
+        "stripe.File.retrieve",
+        return_value=deepcopy(FAKE_FILEUPLOAD_ICON),
+        autospec=True,
+    )
+    @patch(
         "stripe.Dispute.retrieve", return_value=deepcopy(FAKE_DISPUTE), autospec=True
     )
     @patch(
@@ -973,7 +978,9 @@ class TestDisputeEvents(EventTestCase):
         return_value=deepcopy(FAKE_EVENT_DISPUTE_CREATED),
         autospec=True,
     )
-    def test_dispute_created(self, event_retrieve_mock, dispute_retrieve_mock):
+    def test_dispute_created(
+        self, event_retrieve_mock, dispute_retrieve_mock, file_retrieve_mock
+    ):
         fake_stripe_event = deepcopy(FAKE_EVENT_DISPUTE_CREATED)
         event = Event.sync_from_stripe_data(fake_stripe_event)
         event.invoke_webhook_handlers()

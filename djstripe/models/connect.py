@@ -16,7 +16,7 @@ from ..settings import djstripe_settings
 from .base import StripeBaseModel, StripeModel
 
 
-# TODO Add Tests
+# TODO Test Manually
 class ApplicationFee(StripeModel):
     """
     When you collect a transaction fee on top of a charge made for your
@@ -25,8 +25,15 @@ class ApplicationFee(StripeModel):
     Stripe documentation: https://stripe.com/docs/api#application_fees
     """
 
-    stripe_class = stripe.ApplicationFee
+    expand_fields = ["account", "charge", "balance_transaction"]
 
+    stripe_class = stripe.ApplicationFee
+    account = StripeForeignKey(
+        "Account",
+        on_delete=models.PROTECT,
+        related_name="application_fees",
+        help_text="ID of the Stripe account this fee was taken from.",
+    )
     amount = StripeQuantumCurrencyAmountField(help_text="Amount earned, in cents.")
     amount_refunded = StripeQuantumCurrencyAmountField(
         help_text="Amount in cents refunded (can be less than the amount attribute "
@@ -65,6 +72,8 @@ class ApplicationFeeRefund(StripeModel):
     Stripe documentation: https://stripe.com/docs/api#fee_refunds
     """
 
+    stripe_class = stripe.ApplicationFeeRefund
+    expand_fields = ["balance_transaction", "fee"]
     description = None
 
     amount = StripeQuantumCurrencyAmountField(help_text="Amount refunded, in cents.")
@@ -82,7 +91,66 @@ class ApplicationFeeRefund(StripeModel):
         help_text="The application fee that was refunded",
     )
 
+    @classmethod
+    def _api_create(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
+        """
+        Call the stripe API's create operation for this model.
 
+        :param api_key: The api key to use for this request. \
+            Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+        :type api_key: string
+        """
+        if not kwargs.get("id"):
+            raise KeyError("ApplicationFee Object ID is missing")
+
+        try:
+            ApplicationFee.objects.get(id=kwargs["id"])
+        except ApplicationFee.DoesNotExist:
+            raise
+
+        return stripe.ApplicationFee.create_refund(api_key=api_key, **kwargs)
+
+    def api_retrieve(self, api_key=None, stripe_account=None):
+        """
+        Call the stripe API's retrieve operation for this model.
+        :param api_key: The api key to use for this request. \
+            Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+        :type api_key: string
+        :param stripe_account: The optional connected account \
+            for which this request is being made.
+        :type stripe_account: string
+        """
+        nested_id = self.id
+        id = self.fee.id
+
+        # Prefer passed in stripe_account if set.
+        if not stripe_account:
+            stripe_account = self._get_stripe_account_id(api_key)
+
+        return stripe.ApplicationFee.retrieve_refund(
+            id=id,
+            nested_id=nested_id,
+            api_key=api_key or self.default_api_key,
+            expand=self.expand_fields,
+            stripe_account=stripe_account,
+        )
+
+    @classmethod
+    def api_list(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
+        """
+        Call the stripe API's list operation for this model.
+        :param api_key: The api key to use for this request. \
+            Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+        :type api_key: string
+        See Stripe documentation for accepted kwargs for each object.
+        :returns: an iterator over all items in the query
+        """
+        return stripe.ApplicationFee.list_refunds(
+            api_key=api_key, **kwargs
+        ).auto_paging_iter()
+
+
+# TODO Add Tests
 class CountrySpec(StripeBaseModel):
     """
     Stripe documentation: https://stripe.com/docs/api#country_specs
@@ -166,6 +234,7 @@ class Transfer(StripeModel):
 
     stripe_class = stripe.Transfer
     expand_fields = ["balance_transaction"]
+    # expand_fields = ["balance_transaction", "destination", "destination_payment", "source_transaction"]
     stripe_dashboard_item_name = "transfers"
 
     objects = TransferManager()
@@ -186,11 +255,18 @@ class Transfer(StripeModel):
         " balance.",
     )
     currency = StripeCurrencyCodeField()
-    # TODO: Link destination to Card, Account, or Bank Account Models
+    # TODO: Fix Migration Error
     destination = StripeIdField(
         help_text="ID of the bank account, card, or Stripe account the transfer was "
         "sent to."
     )
+    # destination_fk = StripeForeignKey(
+    #     "Account",
+    #     null=True, # only till the migration issue
+    #     on_delete=models.PROTECT,
+    #     related_name="transfers",
+    #     help_text="ID of the Stripe account the transfer was sent to."
+    # )
     destination_payment = StripeIdField(
         null=True,
         blank=True,
@@ -235,12 +311,15 @@ class Transfer(StripeModel):
         return f"{self.human_readable_amount}"
 
 
-# TODO Add Tests
 class TransferReversal(StripeModel):
     """
     Stripe documentation: https://stripe.com/docs/api#transfer_reversals
     """
 
+    expand_fields = ["balance_transaction", "transfer"]
+
+    # TransferReversal classmethods are derived from
+    # and attached to the stripe.Transfer class
     stripe_class = stripe.Transfer
 
     amount = StripeQuantumCurrencyAmountField(help_text="Amount, in cents.")
@@ -263,3 +342,68 @@ class TransferReversal(StripeModel):
 
     def __str__(self):
         return str(self.transfer)
+
+    @classmethod
+    def _api_create(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
+        """
+        Call the stripe API's create operation for this model.
+        :param api_key: The api key to use for this request. \
+            Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+        :type api_key: string
+        """
+
+        if not kwargs.get("id"):
+            raise KeyError("Transfer Object ID is missing")
+
+        try:
+            Transfer.objects.get(id=kwargs["id"])
+        except Transfer.DoesNotExist:
+            raise
+
+        return stripe.Transfer.create_reversal(api_key=api_key, **kwargs)
+
+    def api_retrieve(self, api_key=None, stripe_account=None):
+        """
+        Call the stripe API's retrieve operation for this model.
+        :param api_key: The api key to use for this request. \
+            Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+        :type api_key: string
+        :param stripe_account: The optional connected account \
+            for which this request is being made.
+        :type stripe_account: string
+        """
+        nested_id = self.id
+        id = self.transfer.id
+
+        # Prefer passed in stripe_account if set.
+        if not stripe_account:
+            stripe_account = self._get_stripe_account_id(api_key)
+
+        return stripe.Transfer.retrieve_reversal(
+            id=id,
+            nested_id=nested_id,
+            api_key=api_key or self.default_api_key,
+            expand=self.expand_fields,
+            stripe_account=stripe_account,
+        )
+
+    @classmethod
+    def api_list(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
+        """
+        Call the stripe API's list operation for this model.
+        :param api_key: The api key to use for this request. \
+            Defaults to djstripe_settings.STRIPE_SECRET_KEY.
+        :type api_key: string
+        See Stripe documentation for accepted kwargs for each object.
+        :returns: an iterator over all items in the query
+        """
+        return stripe.Transfer.list_reversals(
+            api_key=api_key, **kwargs
+        ).auto_paging_iter()
+
+    @classmethod
+    def is_valid_object(cls, data):
+        """
+        Returns whether the data is a valid object for the class
+        """
+        return "object" in data and data["object"] == "transfer_reversal"
