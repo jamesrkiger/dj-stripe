@@ -9,7 +9,12 @@ from django.test.testcases import TestCase
 
 from djstripe.models import Transfer
 
-from . import FAKE_BALANCE_TRANSACTION_II, FAKE_TRANSFER, AssertStripeFksMixin
+from . import (
+    FAKE_BALANCE_TRANSACTION_II,
+    FAKE_STANDARD_ACCOUNT,
+    FAKE_TRANSFER,
+    AssertStripeFksMixin,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -36,6 +41,11 @@ class TestTransferStr:
         ],
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
         autospec=True,
@@ -45,6 +55,7 @@ class TestTransferStr:
         self,
         transfer_retrieve_mock,
         balance_transaction_retrieve_mock,
+        account_retrieve_mock,
         fake_transfer_data,
     ):
 
@@ -65,6 +76,11 @@ class TestTransferStr:
 
 class TestTransfer(AssertStripeFksMixin, TestCase):
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
         autospec=True,
@@ -73,7 +89,10 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     def test_sync_from_stripe_data(
-        self, transfer_retrieve_mock, balance_transaction_retrieve_mock
+        self,
+        transfer_retrieve_mock,
+        balance_transaction_retrieve_mock,
+        account_retrieve_mock,
     ):
 
         transfer = Transfer.sync_from_stripe_data(deepcopy(FAKE_TRANSFER))
@@ -85,10 +104,15 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
             transfer.balance_transaction.id
             == FAKE_TRANSFER["balance_transaction"]["id"]
         )
-        assert transfer.destination == FAKE_TRANSFER["destination"]
+        assert transfer.destination.id == FAKE_TRANSFER["destination"]
 
         self.assert_fks(transfer, expected_blank_fks="")
 
+    @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
     @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
@@ -97,7 +121,12 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
-    def test_fee(self, transfer_retrieve_mock, balance_transaction_retrieve_mock):
+    def test_fee(
+        self,
+        transfer_retrieve_mock,
+        balance_transaction_retrieve_mock,
+        account_retrieve_mock,
+    ):
 
         transfer = Transfer.sync_from_stripe_data(deepcopy(FAKE_TRANSFER))
         assert transfer.fee == FAKE_BALANCE_TRANSACTION_II["fee"]

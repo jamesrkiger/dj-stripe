@@ -61,7 +61,6 @@ class ApplicationFee(StripeModel):
     )
 
 
-# TODO Add Tests
 class ApplicationFeeRefund(StripeModel):
     """
     ApplicationFeeRefund objects allow you to refund an ApplicationFee that
@@ -255,18 +254,12 @@ class Transfer(StripeModel):
         " balance.",
     )
     currency = StripeCurrencyCodeField()
-    # TODO: Fix Migration Error
-    destination = StripeIdField(
-        help_text="ID of the bank account, card, or Stripe account the transfer was "
-        "sent to."
+    destination = StripeForeignKey(
+        "Account",
+        on_delete=models.PROTECT,
+        related_name="transfers",
+        help_text="ID of the Stripe account the transfer was sent to.",
     )
-    # destination_fk = StripeForeignKey(
-    #     "Account",
-    #     null=True, # only till the migration issue
-    #     on_delete=models.PROTECT,
-    #     related_name="transfers",
-    #     help_text="ID of the Stripe account the transfer was sent to."
-    # )
     destination_payment = StripeIdField(
         null=True,
         blank=True,

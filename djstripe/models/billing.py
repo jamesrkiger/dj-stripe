@@ -727,7 +727,6 @@ class Invoice(BaseInvoice):
     Stripe documentation: https://stripe.com/docs/api/python#invoices
     """
 
-    # TODO Need to replace invoice.expand_fields fields with their json in all the mocks because right now there is just the id.
     expand_fields = [
         "charge",
         "customer",
@@ -1057,7 +1056,6 @@ class Plan(StripeModel):
     """
 
     stripe_class = stripe.Plan
-    # TODO Need to replace plan.product with the product json in all the mocks.
     expand_fields = ["tiers", "product"]
     stripe_dashboard_item_name = "plans"
 

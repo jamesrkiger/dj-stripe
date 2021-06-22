@@ -518,7 +518,6 @@ class Card(LegacySourceMixin, StripeModel):
         return stripe.Token.create(api_key=api_key, card=card)
 
 
-#  todo imporve str_parts
 class Source(StripeModel):
     """
     Stripe documentation: https://stripe.com/docs/api#sources

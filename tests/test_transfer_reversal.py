@@ -12,6 +12,7 @@ from djstripe.settings import djstripe_settings
 
 from . import (
     FAKE_BALANCE_TRANSACTION_II,
+    FAKE_STANDARD_ACCOUNT,
     FAKE_TRANSFER,
     FAKE_TRANSFER_REVERSAL,
     AssertStripeFksMixin,
@@ -20,7 +21,12 @@ from . import (
 pytestmark = pytest.mark.django_db
 
 
-class TestTransferStr:
+class TestTransferReversalStr:
+    @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
     @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
@@ -35,6 +41,7 @@ class TestTransferStr:
         self,
         transfer_reversal_retrieve_mock,
         balance_transaction_retrieve_mock,
+        account_retrieve_mock,
     ):
 
         transfer_reversal = TransferReversal.sync_from_stripe_data(
@@ -44,6 +51,11 @@ class TestTransferStr:
 
 
 class TestTransfer(AssertStripeFksMixin, TestCase):
+    @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
     @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
@@ -55,7 +67,10 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
         return_value=deepcopy(FAKE_TRANSFER_REVERSAL),
     )
     def test_sync_from_stripe_data(
-        self, transfer_reversal_retrieve_mock, balance_transaction_retrieve_mock
+        self,
+        transfer_reversal_retrieve_mock,
+        balance_transaction_retrieve_mock,
+        account_retrieve_mock,
     ):
 
         transfer_reversal = TransferReversal.sync_from_stripe_data(
@@ -74,6 +89,11 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
         self.assert_fks(transfer_reversal, expected_blank_fks="")
 
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.BalanceTransaction.retrieve",
         return_value=deepcopy(FAKE_BALANCE_TRANSACTION_II),
         autospec=True,
@@ -84,7 +104,10 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
         return_value=deepcopy(FAKE_TRANSFER_REVERSAL),
     )
     def test_api_retrieve(
-        self, transfer_reversal_retrieve_mock, balance_transaction_retrieve_mock
+        self,
+        transfer_reversal_retrieve_mock,
+        balance_transaction_retrieve_mock,
+        account_retrieve_mock,
     ):
 
         transfer_reversal = TransferReversal.sync_from_stripe_data(

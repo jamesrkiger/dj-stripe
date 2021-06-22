@@ -19,6 +19,7 @@ from djstripe.webhooks import TEST_EVENT_ID, call_handlers, handler, handler_all
 from . import (
     FAKE_EVENT_TEST_CHARGE_SUCCEEDED,
     FAKE_EVENT_TRANSFER_CREATED,
+    FAKE_STANDARD_ACCOUNT,
     FAKE_TRANSFER,
     IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
 )
@@ -82,6 +83,11 @@ class TestWebhook(TestCase):
 
     @override_settings(DJSTRIPE_WEBHOOK_VALIDATION="retrieve_event")
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch(
@@ -90,7 +96,7 @@ class TestWebhook(TestCase):
         autospec=True,
     )
     def test_webhook_retrieve_event_pass(
-        self, event_retrieve_mock, transfer_retrieve_mock
+        self, event_retrieve_mock, transfer_retrieve_mock, account_retrieve_mock
     ):
 
         resp = self._send_event(FAKE_EVENT_TRANSFER_CREATED)
@@ -136,6 +142,11 @@ class TestWebhook(TestCase):
         autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch(
@@ -144,7 +155,11 @@ class TestWebhook(TestCase):
         autospec=True,
     )
     def test_webhook_verify_signature_pass(
-        self, event_retrieve_mock, transfer_retrieve_mock, verify_header_mock
+        self,
+        event_retrieve_mock,
+        transfer_retrieve_mock,
+        account_retrieve_mock,
+        verify_header_mock,
     ):
 
         resp = self._send_event(FAKE_EVENT_TRANSFER_CREATED)
@@ -162,6 +177,11 @@ class TestWebhook(TestCase):
     @override_settings(DJSTRIPE_WEBHOOK_VALIDATION=None)
     @patch("stripe.WebhookSignature.verify_header", autospec=True)
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch(
@@ -170,7 +190,11 @@ class TestWebhook(TestCase):
         autospec=True,
     )
     def test_webhook_no_validation_pass(
-        self, event_retrieve_mock, transfer_retrieve_mock, verify_header_mock
+        self,
+        event_retrieve_mock,
+        transfer_retrieve_mock,
+        account_retrieve_mock,
+        verify_header_mock,
     ):
 
         invalid_event = deepcopy(FAKE_EVENT_TRANSFER_CREATED)
@@ -254,11 +278,20 @@ class TestWebhook(TestCase):
         djstripe_settings, "WEBHOOK_EVENT_CALLBACK", return_value=mock_webhook_handler
     )
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch("stripe.Event.retrieve", autospec=True)
     def test_webhook_with_custom_callback(
-        self, event_retrieve_mock, transfer_retrieve_mock, webhook_event_callback_mock
+        self,
+        event_retrieve_mock,
+        transfer_retrieve_mock,
+        account_retrieve_mock,
+        webhook_event_callback_mock,
     ):
         fake_event = deepcopy(FAKE_EVENT_TRANSFER_CREATED)
         event_retrieve_mock.return_value = fake_event
@@ -269,11 +302,16 @@ class TestWebhook(TestCase):
 
     @override_settings(DJSTRIPE_WEBHOOK_SECRET="")
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch("stripe.Event.retrieve", autospec=True)
     def test_webhook_with_transfer_event_duplicate(
-        self, event_retrieve_mock, transfer_retrieve_mock
+        self, event_retrieve_mock, transfer_retrieve_mock, account_retrieve_mock
     ):
         fake_event = deepcopy(FAKE_EVENT_TRANSFER_CREATED)
         event_retrieve_mock.return_value = fake_event
@@ -290,10 +328,17 @@ class TestWebhook(TestCase):
 
     @override_settings(DJSTRIPE_WEBHOOK_SECRET="")
     @patch(
+        "stripe.Account.retrieve",
+        return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
+        autospec=True,
+    )
+    @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
     )
     @patch("stripe.Event.retrieve", autospec=True)
-    def test_webhook_good(self, event_retrieve_mock, transfer_retrieve_mock):
+    def test_webhook_good(
+        self, event_retrieve_mock, transfer_retrieve_mock, account_retrieve_mock
+    ):
 
         fake_event = deepcopy(FAKE_EVENT_TRANSFER_CREATED)
         event_retrieve_mock.return_value = fake_event

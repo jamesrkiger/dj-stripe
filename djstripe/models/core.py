@@ -180,7 +180,7 @@ class Charge(StripeModel):
         related_name="charges",
         help_text="The customer associated with this charge.",
     )
-    # TODO Shouldn't this be on the Dispute model as charge field? Every dispute will have a Charge object
+
     dispute = StripeForeignKey(
         "Dispute",
         on_delete=models.SET_NULL,
@@ -2035,7 +2035,6 @@ class Payout(StripeModel):
     )
     type = StripeEnumField(enum=enums.PayoutType)
 
-    # TODO Write corresponding test
     def __str__(self):
         return f"{self.amount} ({enums.PayoutStatus.humanize(self.status)})"
 
