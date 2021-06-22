@@ -34,7 +34,7 @@ class TestApplicationFee(AssertStripeFksMixin, TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.BalanceTransaction.retrieve",
@@ -130,7 +130,7 @@ class TestApplicationFee(AssertStripeFksMixin, TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.BalanceTransaction.retrieve",

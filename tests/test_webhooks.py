@@ -85,7 +85,7 @@ class TestWebhook(TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
@@ -144,7 +144,7 @@ class TestWebhook(TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
@@ -179,7 +179,7 @@ class TestWebhook(TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
@@ -280,7 +280,7 @@ class TestWebhook(TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
@@ -304,7 +304,7 @@ class TestWebhook(TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True
@@ -330,7 +330,7 @@ class TestWebhook(TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.Transfer.retrieve", return_value=deepcopy(FAKE_TRANSFER), autospec=True

@@ -1736,7 +1736,7 @@ class TestTransferEvents(EventTestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch("stripe.Transfer.retrieve", autospec=True)
     @patch("stripe.Event.retrieve", autospec=True)
@@ -1759,7 +1759,7 @@ class TestTransferEvents(EventTestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch("stripe.Transfer.retrieve", return_value=FAKE_TRANSFER, autospec=True)
     def test_transfer_deleted(self, transfer_retrieve_mock, account_retrieve_mock):

@@ -13,6 +13,7 @@ from . import (
     FAKE_BALANCE_TRANSACTION_II,
     FAKE_STANDARD_ACCOUNT,
     FAKE_TRANSFER,
+    IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     AssertStripeFksMixin,
 )
 
@@ -43,7 +44,7 @@ class TestTransferStr:
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.BalanceTransaction.retrieve",
@@ -78,7 +79,7 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.BalanceTransaction.retrieve",
@@ -111,7 +112,7 @@ class TestTransfer(AssertStripeFksMixin, TestCase):
     @patch(
         "stripe.Account.retrieve",
         return_value=deepcopy(FAKE_STANDARD_ACCOUNT),
-        autospec=True,
+        autospec=IS_STATICMETHOD_AUTOSPEC_SUPPORTED,
     )
     @patch(
         "stripe.BalanceTransaction.retrieve",
