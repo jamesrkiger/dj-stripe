@@ -2070,11 +2070,11 @@ class UsageRecord(StripeModel):
 
 
 # from stripe.api_resources.subscription_item
-# # TODO Stripe doesn't allwo one to delete or update a usage record after it has been created.
+# # TODO Stripe doesn't allow one to delete or update a usage record after it has been created.
 # # disable _api_delete and _api_update ops
 
 
-# # tODO Check th eabove for transfer reversal obhect as well.
+# # tODO Check the above for transfer reversal object as well.
 # @classmethod
 # def _api_create(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
 #     """

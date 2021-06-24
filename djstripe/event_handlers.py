@@ -224,6 +224,7 @@ def dispute_webhook_handler(event):
 
 
 @webhooks.handler(
+    "application_fee",
     "coupon",
     "file",
     "invoice",
@@ -240,11 +241,12 @@ def dispute_webhook_handler(event):
 )
 def other_object_webhook_handler(event):
     """
-    Handle updates to coupon, file, invoice, invoiceitem, payment_intent,
+    Handle updates to application_fee, coupon, file, invoice, invoiceitem, payment_intent,
     plan, product, setup_intent, subscription_schedule, source, tax_rate
     and transfer objects.
 
     Docs for:
+    - application_fee: https://stripe.com/docs/api/application_fees
     - coupon: https://stripe.com/docs/api/coupons
     - file: https://stripe.com/docs/api/files
     - invoice: https://stripe.com/docs/api/invoices
@@ -261,8 +263,9 @@ def other_object_webhook_handler(event):
     """
 
     target_cls = {
-        "charge": models.Charge,
+        "application_fee": models.ApplicationFee,
         "coupon": models.Coupon,
+        "file": models.File,
         "invoice": models.Invoice,
         "invoiceitem": models.InvoiceItem,
         "payment_intent": models.PaymentIntent,

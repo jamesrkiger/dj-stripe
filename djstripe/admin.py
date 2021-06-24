@@ -535,6 +535,18 @@ class TransferReversalAdmin(StripeModelAdmin):
     list_display = ("amount", "transfer")
 
 
+@admin.register(models.ApplicationFee)
+class ApplicationFeeAdmin(StripeModelAdmin):
+    # list_display = ("amount", "description")
+    pass
+
+
+@admin.register(models.ApplicationFeeRefund)
+class ApplicationFeeReversalAdmin(StripeModelAdmin):
+    # list_display = ("amount", "transfer")
+    pass
+
+
 # warn about unregistered models in admin.
 # ! need to run after all registrations
 warn_about_unregistered_in_admin_models()

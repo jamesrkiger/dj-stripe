@@ -127,7 +127,8 @@ class Command(BaseCommand):
             # raise
             self.stderr.write(str(e))
 
-    #  TODO Handle syncing data for connected accounts as well.
+    #  TODO Handle syncing data for connected accounts as well. # https://stripe.com/docs/api/accounts/list
+    # ! Wil need to re-run the entire with different values of stripe_account
     # todo handle supoorting double + nested fields like data.invoice.subscriptions.customer etc?
 
     def get_list_kwargs(self, model):
