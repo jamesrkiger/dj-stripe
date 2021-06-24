@@ -431,47 +431,12 @@ class StripeModel(StripeBaseModel):
                 skip = True
 
             if not skip:
-                # # make all field retrievals of ApplicationFee on the platform account
-                # if field_name == "application_fee" and cls.__name__ != "ApplicationFee":
-                #     # if field is ApplicationFee, set stripe_account=None
-                #     stripe_account = None
 
                 # todo test manually a lot
                 # ! need to manually test more to ensure there are no sideeffects.
                 # add the id of the current object to the list
                 # of ids being processed
                 current_ids.add(id_)
-
-                # if class is applicationfee, mahually rerieve the data
-                # if cls.__name__ == "ApplicationFee" and field_name in ("charge", "balance_transaction"):
-                # if cls.__name__ == "ApplicationFee" and field_name in ("balance_transaction",):
-                #     print("LOOP FK", cls, field, current_ids, id_, manipulated_data.get("account"))
-                #     print(f"""
-                #         class={field.related_model.stripe_class},
-                #         id={manipulated_data.get(field_name)},
-                #         api_key={djstripe_settings.STRIPE_SECRET_KEY}, #self.default_api_key,
-                #         expand={getattr(field.related_model, "expand_fields", None)},
-                #         stripe_account=None
-                #     """)
-
-                #     data = field.related_model.stripe_class.retrieve(
-                #         id=manipulated_data.get(field_name),
-                #         api_key=djstripe_settings.STRIPE_SECRET_KEY, #self.default_api_key,
-                #         expand=getattr(field.related_model, "expand_fields", None),
-                #         stripe_account=None #manipulated_data.get("account")
-                #     )
-
-                #     field_data = field.related_model._create_from_stripe_object(
-                #         data,
-                #         current_ids=current_ids,
-                #         pending_relations=pending_relations,
-                #         save=True,
-                #         stripe_account=None #manipulated_data.get("account"),
-                #     )
-
-                #     print("DATA and FIELD DATA", data, field_data)
-                # else:
-                # print("Object field to FK", cls, field, current_ids, id_, stripe_account)
 
                 field_data, _ = field.related_model._get_or_create_from_stripe_object(
                     manipulated_data,

@@ -76,7 +76,11 @@ class BalanceTransaction(StripeModel):
 
     def get_source_class(self):
         try:
-            return apps.get_model("djstripe", self.type)
+            model_name = self.type
+            if model_name == "application_fee":
+                model_name = "ApplicationFee"
+            print(model_name)
+            return apps.get_model("djstripe", model_name)
         except LookupError:
             raise
 
