@@ -76,7 +76,11 @@ class BalanceTransaction(StripeModel):
 
     def get_source_class(self):
         try:
-            return apps.get_model("djstripe", self.type)
+            model_name = self.type
+            if model_name == "application_fee":
+                model_name = "ApplicationFee"
+            print(model_name)
+            return apps.get_model("djstripe", model_name)
         except LookupError:
             raise
 
@@ -97,16 +101,16 @@ class Charge(StripeModel):
     """
 
     stripe_class = stripe.Charge
-    # expand_fields = [
-    #     "balance_transaction",
-    #     "customer",
-    #     "invoice",
-    #     "payment_intent",
-    #     "application_fee",
-    #     "on_behalf_of",
-    #     "source_transfer",
-    #     "transfer",
-    # ]
+    expand_fields = [
+        "balance_transaction",
+        "customer",
+        "invoice",
+        "payment_intent",
+        "application_fee",
+        "on_behalf_of",
+        "source_transfer",
+        "transfer",
+    ]
     stripe_dashboard_item_name = "payments"
 
     amount = StripeDecimalCurrencyAmountField(help_text="Amount charged (as decimal).")
@@ -377,6 +381,8 @@ class Charge(StripeModel):
         )
 
     def _attach_objects_hook(self, cls, data, current_ids=None):
+        # print(f"_attach_object_hook for {data.get('object')} and class: {cls}")
+        from .connect import ApplicationFee
         from .payment_methods import DjstripePaymentMethod
 
         # Source doesn't always appear to be present, so handle the case
@@ -392,6 +398,15 @@ class Charge(StripeModel):
         self.source, _ = DjstripePaymentMethod._get_or_create_source(
             data=source_data, source_type=source_type
         )
+
+        # if data.get("application_fee"):
+        #     print(f"Applicationfee exists on {self}, {data.get('application_fee').get('id')}")
+        # try:
+        #     self.application_fee = ApplicationFee.objects.get(id=cls._id_from_data(data.get("application_fee")))
+        #     print(f"Retrieved and attached {self.application_fee.id} to {self}")
+        # except ApplicationFee.DoesNotExist:
+        #     print(f"application_fee does not exist in cls {cls}. Setting it as Null and setting it in post_save_hook instead")
+        #     self.application_fee = None
 
     def _calculate_refund_amount(self, amount: Optional[Decimal]) -> int:
         """
@@ -1506,6 +1521,7 @@ class Event(StripeModel):
         with transaction.atomic():
             # process the event and create an Event Object
             ret = cls._create_from_stripe_object(data)
+            print(f"Processing {ret.type}")
             ret.invoke_webhook_handlers()
             return ret
 
@@ -1615,7 +1631,7 @@ class PaymentIntent(StripeModel):
     """
 
     stripe_class = stripe.PaymentIntent
-    # expand_fields = ["customer", "payment_method", "on_behalf_of"]
+    expand_fields = ["customer", "payment_method", "on_behalf_of"]
     stripe_dashboard_item_name = "payments"
 
     amount = StripeQuantumCurrencyAmountField(
