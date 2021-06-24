@@ -537,14 +537,12 @@ class TransferReversalAdmin(StripeModelAdmin):
 
 @admin.register(models.ApplicationFee)
 class ApplicationFeeAdmin(StripeModelAdmin):
-    # list_display = ("amount", "description")
-    pass
+    list_display = ("amount", "account")
 
 
 @admin.register(models.ApplicationFeeRefund)
 class ApplicationFeeReversalAdmin(StripeModelAdmin):
-    # list_display = ("amount", "transfer")
-    pass
+    list_display = ("amount", "fee")
 
 
 # warn about unregistered models in admin.

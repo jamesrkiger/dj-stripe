@@ -79,6 +79,7 @@ class Command(BaseCommand):
 
         self.stdout.write("Syncing {}:".format(model_name))
 
+        # TODO Trap the for loop for stripe_obj so that in case of error in any model instance the instances after that still can get synced.
         count = 0
         try:
             for list_kwargs in self.get_list_kwargs(model):

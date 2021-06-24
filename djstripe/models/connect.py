@@ -13,7 +13,9 @@ from ..fields import (
 )
 from ..managers import TransferManager
 from ..settings import djstripe_settings
+from .account import Account
 from .base import StripeBaseModel, StripeModel
+from .core import Charge
 
 # todo All These methods need to automatically set the stripe_acct key in stripe retrieval etc.
 # todo And all fk retrievals should also use the same stripe_acct
@@ -66,30 +68,39 @@ class ApplicationFee(StripeModel):
         )
     )
 
-    # # todo update tests
+    # todo update tests
     def __str__(self):
-        return self.human_readable_amount
+        if self.refunded:
+            # Complete Refund
+            return f"{self.human_readable_amount} Reversed"
+        elif self.amount_refunded:
+            # Partial Refund
+            return f"{self.human_readable_amount} Partially Reversed"
+        # No Refund
+        return f"{self.human_readable_amount}"
 
     @classmethod
     def _find_owner_account(cls, data):
-        from .account import Account
-
         return Account.get_or_retrieve_for_api_key(djstripe_settings.STRIPE_SECRET_KEY)
 
-    # def _attach_objects_post_save_hook(self, cls, data, pending_relations=None):
-    #     from .account import Account
+    # Test Refunding from charge. Refunding from application fee works fine.
 
-    #     super()._attach_objects_post_save_hook(
-    #         cls, data, pending_relations=pending_relations
-    #     )
+    def _attach_objects_post_save_hook(self, cls, data, pending_relations=None):
 
-    #     # Replace the Owner account with the platform account
-    #     self.djstripe_owner_account = Account.get_or_retrieve_for_api_key(
-    #         djstripe_settings.STRIPE_SECRET_KEY
-    #     )
-    #     self.save()
+        super()._attach_objects_post_save_hook(
+            cls, data, pending_relations=pending_relations
+        )
 
-    #! The webhook for applicationfee is fired on platform accounts but its fields like charge and balancetransaction are on the connected account specified by account.
+        for reversals_data in data.get("refunds").auto_paging_iter():
+            ApplicationFeeRefund.sync_from_stripe_data(reversals_data)
+
+        # # Replace the Owner account with the platform account
+        # self.djstripe_owner_account = Account.get_or_retrieve_for_api_key(
+        #     djstripe_settings.STRIPE_SECRET_KEY
+        # )
+        # self.save()
+
+    #! The webhook for applicationfee is fired on platform accounts but its field, charge, is on the connected account specified by account.
     #! The other issue is that since the other webhook for charge is a connect webhook, its model field applicationfee is retrieved by the strip_account header of the connected account which is incorrect
 
     #! The proposed solution is to override application_fee field retrieval by always setting stripe_account key to None
@@ -116,8 +127,6 @@ class ApplicationFee(StripeModel):
         """
         super()._attach_objects_hook(cls, data, current_ids=current_ids)
 
-        from djstripe.models.core import Charge
-
         try:
             self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
             print(f"Retrieved and attached {self.charge.id} to {self}")
@@ -141,7 +150,6 @@ class ApplicationFee(StripeModel):
         """
         # this function will also be invoked by any class that has a FK to ApplicationFee
         if data.get("object") == "application_fee":
-            from djstripe.models.core import BalanceTransaction, Charge
 
             stripe_account = cls._id_from_data(data.get("account"))
 
@@ -209,6 +217,9 @@ class ApplicationFeeRefund(StripeModel):
         related_name="refunds",
         help_text="The application fee that was refunded",
     )
+
+    def __str__(self):
+        return self.fee
 
     @classmethod
     def _api_create(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
