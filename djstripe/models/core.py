@@ -97,16 +97,16 @@ class Charge(StripeModel):
     """
 
     stripe_class = stripe.Charge
-    # expand_fields = [
-    #     "balance_transaction",
-    #     "customer",
-    #     "invoice",
-    #     "payment_intent",
-    #     "application_fee",
-    #     "on_behalf_of",
-    #     "source_transfer",
-    #     "transfer",
-    # ]
+    expand_fields = [
+        "balance_transaction",
+        "customer",
+        "invoice",
+        "payment_intent",
+        "application_fee",
+        "on_behalf_of",
+        "source_transfer",
+        "transfer",
+    ]
     stripe_dashboard_item_name = "payments"
 
     amount = StripeDecimalCurrencyAmountField(help_text="Amount charged (as decimal).")
@@ -1575,7 +1575,7 @@ class PaymentIntent(StripeModel):
     """
 
     stripe_class = stripe.PaymentIntent
-    # expand_fields = ["customer", "payment_method", "on_behalf_of"]
+    expand_fields = ["customer", "payment_method", "on_behalf_of"]
     stripe_dashboard_item_name = "payments"
 
     amount = StripeQuantumCurrencyAmountField(

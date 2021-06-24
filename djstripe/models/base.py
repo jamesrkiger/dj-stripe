@@ -273,7 +273,7 @@ class StripeModel(StripeBaseModel):
         """
         from .account import Account
 
-        stripe_account = data.get("account")
+        stripe_account = cls._id_from_data(data.get("account"))
         if stripe_account:
             return Account._get_or_retrieve(id=stripe_account)
 

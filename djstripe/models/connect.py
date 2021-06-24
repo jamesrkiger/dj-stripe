@@ -31,7 +31,7 @@ class ApplicationFee(StripeModel):
     Stripe documentation: https://stripe.com/docs/api#application_fees
     """
 
-    # expand_fields = ["account", "charge", "balance_transaction"]
+    expand_fields = ["account", "charge", "balance_transaction"]
 
     stripe_class = stripe.ApplicationFee
     account = StripeForeignKey(
@@ -129,14 +129,19 @@ class ApplicationFee(StripeModel):
         :type current_ids: set
         """
         print(f"Attach object hooks invoked by: {cls} {current_ids}")
-        # from djstripe.models.core import BalanceTransaction, Charge
-        # super()._attach_objects_hook(cls, data, current_ids=current_ids)
+        from djstripe.models.core import BalanceTransaction, Charge
 
+        super()._attach_objects_hook(cls, data, current_ids=current_ids)
+        try:
+            self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+            print(f"Retrieved and attached {self.charge.id} to {self}")
+        except Charge.DoesNotExist:
+            pass
         # stripe_account = data.get("account")
 
         # # retrieve and sync charge
         # charge_data = Charge.stripe_class.retrieve(
-        #     id=data.get("charge"),
+        #     id=cls._id_from_data(data.get("charge")),
         #     api_key=self.default_api_key,
         #     expand=getattr(Charge,"expand_fields", None),
         #     stripe_account=stripe_account
@@ -148,7 +153,7 @@ class ApplicationFee(StripeModel):
         #         charge = Charge._create_from_stripe_object(charge_data, current_ids=current_ids, stripe_account=stripe_account)
 
         # except IntegrityError as error:
-        #     charge = Charge.objects.get(id=data.get("charge"))
+        #     charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
 
         # # add the retrieved charge instance to the charge model field
         # self.charge = charge
@@ -185,7 +190,7 @@ class ApplicationFee(StripeModel):
 
     # # retrieve and sync charge
     # charge_data = Charge.stripe_class.retrieve(
-    #         id=cls._id_from_data(data.get("charge")),
+    #         id=cls._id_from_data(cls._id_from_data(data.get("charge"))),
     #         api_key=djstripe_settings.STRIPE_SECRET_KEY,
     #         expand=getattr(Charge,"expand_fields", None),
     #         stripe_account=stripe_account
@@ -199,7 +204,7 @@ class ApplicationFee(StripeModel):
     #         charge = Charge._create_from_stripe_object(charge_data, current_ids=current_ids, stripe_account=stripe_account)
 
     # except IntegrityError as error:
-    #     charge = Charge.objects.get(id=data.get("charge"))
+    #     charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
 
     # return super().sync_from_stripe_data(data)
 
@@ -220,38 +225,45 @@ class ApplicationFee(StripeModel):
         """
         print("_get_or_create override", cls, field_name, current_ids)
 
-        # TODO create the charge and balancetransaction objects
-        from djstripe.models.core import BalanceTransaction, Charge
+        # this function will also be invoked by any class that has a FK to ApplicationFee
+        if data.get("object") == "application_fee":
+            # TODO create the charge and balancetransaction objects
+            from djstripe.models.core import BalanceTransaction, Charge
 
-        stripe_account = data.get("account")
+            stripe_account = cls._id_from_data(data.get("account"))
 
-        # retrieve and sync charge
-        charge_data = Charge.stripe_class.retrieve(
-            id=cls._id_from_data(data.get("charge")),
-            api_key=djstripe_settings.STRIPE_SECRET_KEY,
-            expand=getattr(Charge, "expand_fields", None),
-            stripe_account=stripe_account,
-        )
-        print("Creating and syncing Charge")
-        try:
-            charge = Charge.objects.get(id=data.get("charge"))
-        except Charge.DoesNotExist:
+            # retrieve and sync charge
+            charge_data = Charge.stripe_class.retrieve(
+                id=cls._id_from_data(data.get("charge")),
+                api_key=djstripe_settings.STRIPE_SECRET_KEY,
+                expand=getattr(Charge, "expand_fields", None),
+                stripe_account=stripe_account,
+            )
+            print("Creating and syncing Charge")
             try:
-                # with transaction.atomic():
-                # charge will also retrieve and create the balancetransaction object
-                charge = Charge._create_from_stripe_object(
-                    charge_data, current_ids=current_ids, stripe_account=stripe_account
-                )
+                charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+            except Charge.DoesNotExist:
+                try:
+                    # with transaction.atomic():
+                    # charge will also retrieve and create the balancetransaction object
+                    charge = Charge._create_from_stripe_object(
+                        charge_data,
+                        current_ids=current_ids,
+                        stripe_account=stripe_account,
+                    )
 
-            except IntegrityError as error:
-                # Remote possibility that something else (some other webhook) creates
-                # the Charge object betwene the first check and the second create query.
-                charge = Charge.objects.get(id=data.get("charge"))
+                except IntegrityError as error:
+                    print("INTEGRITY ERROR")
+                    # Remote possibility that something else (some other webhook) creates
+                    # the Charge object betwene the first check and the second create query.
+                    charge = Charge.objects.get(
+                        id=cls._id_from_data(data.get("charge"))
+                    )
 
-        # add the retrieved charge instance to the charge model field
-        # self.charge = charge
+            # add the retrieved charge instance to the charge model field
+            # self.charge = charge
 
-        print(f"Retrieved and attached {charge.id}")
+            print(f"Retrieved and attached {charge.id}")
 
         return super()._get_or_create_from_stripe_object(
             data=data,
