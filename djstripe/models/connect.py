@@ -1,6 +1,8 @@
 import stripe
 from django.db import IntegrityError, models, transaction
 
+from djstripe import fields
+
 from .. import enums
 from ..fields import (
     JSONField,
@@ -15,7 +17,7 @@ from ..managers import TransferManager
 from ..settings import djstripe_settings
 from .account import Account
 from .base import StripeBaseModel, StripeModel
-from .core import Charge
+from .core import BalanceTransaction, Charge
 
 # todo All These methods need to automatically set the stripe_acct key in stripe retrieval etc.
 # todo And all fk retrievals should also use the same stripe_acct
@@ -25,6 +27,10 @@ from .core import Charge
 # The error is that since charge also has a balance transaction field and that the code tries to retrive without a stripe account header!
 
 # ! applicationfee will exist on the platform account
+
+
+# ! applicationfee and applicationfee.balancetransaction are on the platform account
+# ! charge, applicationfee.charge and charge.balance_transaction are on the connected account while charge.application_fee is on the platform account
 class ApplicationFee(StripeModel):
     """
     When you collect a transaction fee on top of a charge made for your
@@ -57,6 +63,8 @@ class ApplicationFee(StripeModel):
     charge = StripeForeignKey(
         "Charge",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         help_text="The charge that the application fee was taken from.",
     )
     currency = StripeCurrencyCodeField()
@@ -79,26 +87,27 @@ class ApplicationFee(StripeModel):
         # No Refund
         return f"{self.human_readable_amount}"
 
-    @classmethod
-    def _find_owner_account(cls, data):
-        return Account.get_or_retrieve_for_api_key(djstripe_settings.STRIPE_SECRET_KEY)
+    # @classmethod
+    # def _find_owner_account(cls, data):
+    #     return Account.get_or_retrieve_for_api_key(djstripe_settings.STRIPE_SECRET_KEY)
 
-    # Test Refunding from charge. Refunding from application fee works fine.
-
+    # TODO Test Refunding from charge. Refunding from application fee works fine.
     def _attach_objects_post_save_hook(self, cls, data, pending_relations=None):
 
         super()._attach_objects_post_save_hook(
             cls, data, pending_relations=pending_relations
         )
 
+        try:
+            # fetch and save the charge field to application_fee
+            self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+            self.save()
+        except Charge.DoesNotExist:
+            print(f"Attach Post Save Doesnot exist {data.get('object')}")
+            pass
+
         for reversals_data in data.get("refunds").auto_paging_iter():
             ApplicationFeeRefund.sync_from_stripe_data(reversals_data)
-
-        # # Replace the Owner account with the platform account
-        # self.djstripe_owner_account = Account.get_or_retrieve_for_api_key(
-        #     djstripe_settings.STRIPE_SECRET_KEY
-        # )
-        # self.save()
 
     #! The webhook for applicationfee is fired on platform accounts but its field, charge, is on the connected account specified by account.
     #! The other issue is that since the other webhook for charge is a connect webhook, its model field applicationfee is retrieved by the strip_account header of the connected account which is incorrect
@@ -106,33 +115,124 @@ class ApplicationFee(StripeModel):
     #! The proposed solution is to override application_fee field retrieval by always setting stripe_account key to None
     #! And solution to ensure retrieval of ApplicationFee fields happen by account need to be thought of.
 
-    # ? all webhooks that get fired
+    # ? all webhooks that get fired will run in their own atomic db transaction
     # connect charge.succeeded [evt_1J5V8HQuFmP1Mw5uJre1cCvg]
     # connect payment_intent.succeeded [evt_1J5V8HQuFmP1Mw5un5Tp2UHU]
     # application_fee.created [evt_1J5V8IJSZQVUcJYgkasyxmha]
     # connect payment_intent.created [evt_1J5V8HQuFmP1Mw5utE7sIdme]
 
-    # THis will run whenerv application_fee is about to get saved. So even when charge.aplication_fee needs to be saved as well as the application_fee from the application_fee.created handelr
-    def _attach_objects_hook(self, cls, data, current_ids=None):
-        """
-        Gets called by this object's create and sync methods just before save.
-        We use this to retrieve the charge field using the stripe_account
-        header set as the account field
+    # This will run whenever application_fee is about to get saved. So even when charge.aplication_fee needs to be saved as well as the application_fee from the application_fee.created handelr
+    # def _attach_objects_hook(self, cls, data, current_ids=None):
+    #     """
+    #     Gets called by this object's create and sync methods just before save.
+    #     We use this to retrieve the charge field using the stripe_account
+    #     header set as the account field
 
-        :param cls: The target class for the instantiated object.
-        :param data: The data dictionary received from the Stripe API.
-        :type data: dict
-        :param current_ids: stripe ids of objects that are currently being processed
-        :type current_ids: set
-        """
-        super()._attach_objects_hook(cls, data, current_ids=current_ids)
+    #     :param cls: The target class for the instantiated object.
+    #     :param data: The data dictionary received from the Stripe API.
+    #     :type data: dict
+    #     :param current_ids: stripe ids of objects that are currently being processed
+    #     :type current_ids: set
+    #     """
+    #     print(f"_attach_object_hook for {data.get('object')} and class: {cls}")
+    #     try:
+    #     # first try to create and sync balancetransactoin and then charge
 
-        try:
-            self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
-            print(f"Retrieved and attached {self.charge.id} to {self}")
-        except Charge.DoesNotExist:
-            pass
+    #         self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+    #         print(f"Retrieved and attached {self.charge.id} to {self}")
+    #     except Charge.DoesNotExist:
+    #         # ultimately charge object needs to exist here
+    #         print(f"charge does not exist in cls {cls}")
 
+    # try:
+    #     self.balance_transaction = BalanceTransaction.objects.get(id=cls._id_from_data(data.get("balance_transaction")))
+    #     print(f"Retrieved and attached {self.balance_transaction.id} to {self}")
+
+    # except BalanceTransaction.DoesNotExist:
+    #     print(f"BalanceTransaction does not exist in cls {cls}")
+
+    #     if data.get("object") == "application_fee":
+
+    #         stripe_account = None
+
+    #         # retrieve and sync BalanceTransaction
+    #         balance_transaction_data = BalanceTransaction.stripe_class.retrieve(
+    #             id=cls._id_from_data(data.get("balance_transaction")),
+    #             api_key=djstripe_settings.STRIPE_SECRET_KEY,
+    #             expand=getattr(BalanceTransaction, "expand_fields", None),
+    #             stripe_account=stripe_account,
+    #         )
+
+    #         try:
+    #             # I don't care if the charge has been saved or not, it'll get saved with application fee anyway.
+    #             self.balance_transaction, _ = BalanceTransaction._get_or_create_from_stripe_object(
+    #                         balance_transaction_data,
+    #                         current_ids=current_ids,
+    #                         stripe_account=stripe_account,
+    #                         save=True,
+    #                     )
+    #             # self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+    #         # except Charge.DoesNotExist:
+    #         #     try:
+    #         #         # with transaction.atomic():
+    #         #             # charge will also retrieve and create the balancetransaction object
+    #         #             self.charge, _ = Charge._get_or_create_from_stripe_object(
+    #         #                 charge_data,
+    #         #                 current_ids=current_ids,
+    #         #                 stripe_account=stripe_account,
+    #         #             )
+
+    #         except IntegrityError:
+    #                 # Remote possibility that something else (some other webhook) creates
+    #                 # the Charge object betwene the first check and the second create query.
+    #                 self.balance_transaction = BalanceTransaction.objects.get(id=cls._id_from_data(data.get("balance_transaction")))
+
+    #         try:
+    #         # first try to create and sync balancetransactoin and then charge
+
+    #             self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+    #             print(f"Retrieved and attached {self.charge.id} to {self}")
+    #         except Charge.DoesNotExist:
+    #             # ultimately charge object needs to exist here
+    #             print(f"charge does not exist in cls {cls}")
+
+    #             if data.get("object") == "application_fee":
+
+    #                 stripe_account = cls._id_from_data(data.get("account"))
+
+    #                 # retrieve and sync charge
+    #                 charge_data = Charge.stripe_class.retrieve(
+    #                     id=cls._id_from_data(data.get("charge")),
+    #                     api_key=djstripe_settings.STRIPE_SECRET_KEY,
+    #                     expand=getattr(Charge, "expand_fields", None),
+    #                     stripe_account=stripe_account,
+    #                 )
+
+    #                 try:
+    #                     # I don't care if the charge has been saved or not, it'll get saved with application fee anyway.
+    #                     self.charge, _ = Charge._get_or_create_from_stripe_object(
+    #                                 charge_data,
+    #                                 current_ids=current_ids,
+    #                                 stripe_account=stripe_account,
+    #                                 # save=False,
+    #                             )
+    #                     # self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+    #                 # except Charge.DoesNotExist:
+    #                 #     try:
+    #                 #         # with transaction.atomic():
+    #                 #             # charge will also retrieve and create the balancetransaction object
+    #                 #             self.charge, _ = Charge._get_or_create_from_stripe_object(
+    #                 #                 charge_data,
+    #                 #                 current_ids=current_ids,
+    #                 #                 stripe_account=stripe_account,
+    #                 #             )
+
+    #                 except IntegrityError:
+    #                         # Remote possibility that something else (some other webhook) creates
+    #                         # the Charge object betwene the first check and the second create query.
+    #                         self.charge = Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+
+    # ! Ultimately I need charge to exist to save applicaton_fee.
     @classmethod
     def _get_or_create_from_stripe_object(
         cls,
@@ -148,8 +248,38 @@ class ApplicationFee(StripeModel):
         Set the stripe_account to None to ensure application_fee is always retrieved from the
         platform account, which is where it will exist
         """
+        # ApplicationFee.id
+        # ApplicationFee.charge
+        # Charge.ApplicationFee
+        print(f"Case of getting or creating {data.get('object')}.{field_name}")
         # this function will also be invoked by any class that has a FK to ApplicationFee
-        if data.get("object") == "application_fee":
+        if data.get("object") == "application_fee" and field_name == "id":
+            # ApplicationFee.id
+            # case when ApplicationFee model is trying to be retrieved or created
+
+            stripe_account = None
+
+            # retrieve and sync BalanceTransaction
+            balance_transaction_data = BalanceTransaction.stripe_class.retrieve(
+                id=cls._id_from_data(data.get("balance_transaction")),
+                api_key=djstripe_settings.STRIPE_SECRET_KEY,
+                expand=getattr(BalanceTransaction, "expand_fields", None),
+                stripe_account=stripe_account,
+            )
+
+            try:
+                print(
+                    f"Getting or Creating BalanceTransaction object for ApplicationFee"
+                )
+                BalanceTransaction._get_or_create_from_stripe_object(
+                    balance_transaction_data,
+                    current_ids=current_ids,
+                    stripe_account=stripe_account,
+                    save=True,
+                )
+
+            except IntegrityError:
+                print("BalanceTransaction already exists. Got Integrity Error")
 
             stripe_account = cls._id_from_data(data.get("account"))
 
@@ -162,22 +292,44 @@ class ApplicationFee(StripeModel):
             )
 
             try:
-                Charge.objects.get(id=cls._id_from_data(data.get("charge")))
-            except Charge.DoesNotExist:
-                try:
-                    with transaction.atomic():
-                        # charge will also retrieve and create the balancetransaction object
-                        Charge._create_from_stripe_object(
-                            charge_data,
-                            current_ids=current_ids,
-                            stripe_account=stripe_account,
-                        )
+                print(f"Getting or Creating Charge object for ApplicationFee")
+                Charge._get_or_create_from_stripe_object(
+                    charge_data,
+                    current_ids=current_ids,
+                    stripe_account=stripe_account,
+                )
 
-                except IntegrityError as error:
-                    # Remote possibility that something else (some other webhook) creates
-                    # the Charge object betwene the first check and the second create query.
-                    Charge.objects.get(id=cls._id_from_data(data.get("charge")))
+            except IntegrityError:
+                print("Charge already exists. Got Integrity Error")
 
+        if data.get("object") == "application_fee" and field_name == "charge":
+            # trying to retrieve ApplicationFee.charge
+            return super()._get_or_create_from_stripe_object(
+                data=data,
+                field_name=field_name,
+                refetch=refetch,
+                current_ids=current_ids,
+                pending_relations=pending_relations,
+                save=save,
+                stripe_account=cls._id_from_data(data.get("account")),
+            )
+        if data.get("object") != "application_fee" and field_name == "application_fee":
+            # SomeModel.application_fee
+            return super()._get_or_create_from_stripe_object(
+                data=data,
+                field_name=field_name,
+                refetch=refetch,
+                current_ids=current_ids,
+                pending_relations=pending_relations,
+                save=save,
+                stripe_account=None,
+            )
+
+        # one can retrieve the following
+        # 1) ApplicationFee object itself --> Application_fee.id
+        # 2) ApplicationFee object fields --> Application_fee.*
+
+        # todo when charge is being retrieved from the applicationfee model class, set stripe_account back to applicationfee.account field
         return super()._get_or_create_from_stripe_object(
             data=data,
             field_name=field_name,
