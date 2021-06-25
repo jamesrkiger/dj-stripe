@@ -87,9 +87,9 @@ class ApplicationFee(StripeModel):
         # No Refund
         return f"{self.human_readable_amount}"
 
-    # @classmethod
-    # def _find_owner_account(cls, data):
-    #     return Account.get_or_retrieve_for_api_key(djstripe_settings.STRIPE_SECRET_KEY)
+    @classmethod
+    def _find_owner_account(cls, data):
+        return Account.get_or_retrieve_for_api_key(djstripe_settings.STRIPE_SECRET_KEY)
 
     # TODO Test Refunding from charge. Refunding from application fee works fine.
     def _attach_objects_post_save_hook(self, cls, data, pending_relations=None):
