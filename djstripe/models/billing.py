@@ -1396,6 +1396,14 @@ class Subscription(StripeModel):
     )
 
     # TODO: latest_invoice (issue #1067)
+    latest_invoice = StripeForeignKey(
+        "Invoice",
+        help_text="The most recent invoice this subscription has generated.",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
     next_pending_invoice_item_invoice = StripeDateTimeField(
         null=True,
         blank=True,
