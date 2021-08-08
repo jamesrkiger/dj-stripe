@@ -150,6 +150,8 @@ class StripeModel(StripeBaseModel):
         except (AttributeError, KeyError, ValueError):
             pass
 
+        # todo refactor this to directly use self._meta._get_fields(forward=False)
+
         # Get reverse foreign key relations to Account in case we need to
         # retrieve ourselves using that Account ID.
         reverse_account_relations = (
@@ -320,10 +322,28 @@ class StripeModel(StripeBaseModel):
         # Iterate over all the fields that we know are related to Stripe,
         # let each field work its own magic
         ignore_fields = ["date_purged", "subscriber"]  # XXX: Customer hack
-        for field in cls._meta.fields:
+        # for field in cls._meta.fields:
+
+        # ! this will return all forward and reverse relations for given cls (the object of the current processing stripe webhook)
+        print(f"all fields: {cls._meta.get_fields()}")
+        for field in cls._meta.get_fields():
             if field.name.startswith("djstripe_") or field.name in ignore_fields:
                 continue
-            if isinstance(field, models.ForeignKey):
+
+            if isinstance(
+                field, (models.ManyToManyRel, models.ManyToOneRel)
+            ) and not isinstance(field, models.OneToOneRel):
+                # We don't currently support syncing from
+                # reverse side of Many relationship
+                continue
+
+            # # ! do not support m2m fields sync
+            # if field.many_to_many:
+            #     continue
+            # will work for forward FK and o2o relations
+            # if isinstance(field, models.ForeignKey):
+            # will work for forward FK and o2o relations and reverse o2o relations
+            if isinstance(field, (models.ForeignKey, models.OneToOneRel)):
                 field_data, skip = cls._stripe_object_field_to_foreign_key(
                     field=field,
                     manipulated_data=manipulated_data,
@@ -333,6 +353,22 @@ class StripeModel(StripeBaseModel):
                 )
                 if skip:
                     continue
+            # todo for m2m fields one would also need to handle the case of an intermediate model being used
+
+            # ! please note that we would need to query the data since the retrieved data will not be directly in the data
+            # will work for reverse FK and o2o relations
+            # if isinstance(
+            #     field, models.ManyToOneRel
+            # ):  # isinstance(field, models.ForeignObjectRel)
+            #     field_data, skip = cls._stripe_object_field_to_foreign_key(
+            #         field=field,
+            #         manipulated_data=manipulated_data,
+            #         current_ids=current_ids,
+            #         pending_relations=pending_relations,
+            #         stripe_account=stripe_account,
+            #     )
+            #     if skip:
+            #         continue
             else:
                 if hasattr(field, "stripe_to_db"):
                     field_data = field.stripe_to_db(manipulated_data)
