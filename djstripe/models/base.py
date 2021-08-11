@@ -189,6 +189,10 @@ class StripeModel(StripeBaseModel):
         if not stripe_account:
             stripe_account = self._get_stripe_account_id(api_key)
 
+        print(
+            f"Retrieving {self.id}, {self.__class__} with stripe_account: {stripe_account}"
+        )
+
         return self.stripe_class.retrieve(
             id=self.id,
             api_key=api_key or self.default_api_key,
