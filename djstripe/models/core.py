@@ -80,6 +80,8 @@ class BalanceTransaction(StripeModel):
             model_name = self.type
             if model_name == "application_fee":
                 model_name = "ApplicationFee"
+            elif model_name == "application_fee_refund":
+                model_name = "ApplicationFeeRefund"
             print(model_name)
             return apps.get_model("djstripe", model_name)
         except LookupError:

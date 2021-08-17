@@ -26,11 +26,11 @@ from .core import BalanceTransaction, Charge
 # TODO Implement Full Webhook event support for ApplicationFee and ApplicationFee Refund Objects
 # TODO Test Manually
 
-# The error is that since charge also has a balance transaction field and that the code tries to retrive without a stripe account header!
+# The error is that since charge also has a balance transaction field and that the code tries to retrieve without a stripe account header!
 
 # ! applicationfee will exist on the platform account
 
-
+# import stripe; stripe.api_key="sk_test_51ItQ7cJSZQVUcJYgHMIKKvkqL6XNUHRI1kQcpoR9yEdOusA5rWpTXpXYnIqHpIvWlu5odQYNBDVwNSYTJN1HmtCC00RvEyLiZW";payment_intent = stripe.PaymentIntent.create(payment_method_types=['card'],amount=1000,currency='usd',application_fee_amount=123,stripe_account='acct_1J5NiOQuFmP1Mw5u', confirm=True, customer='cus_Jipya0TWp92QHK')
 # ! applicationfee and applicationfee.balancetransaction are on the platform account
 # ! charge, applicationfee.charge and charge.balance_transaction are on the connected account while charge.application_fee is on the platform account
 
@@ -40,7 +40,7 @@ class ApplicationFee(StripeModel):
     When you collect a transaction fee on top of a charge made for your
     user (using Connect), an ApplicationFee is created in your account.
 
-    Please note the model field charge exists on the Stripe Connected Account
+    Please note the modelfield charge exists on the Stripe Connected Account
     while the application_fee modelfield on Charge model exists on the Platform Account!
 
     Stripe documentation: https://stripe.com/docs/api#application_fees
@@ -116,8 +116,11 @@ class ApplicationFee(StripeModel):
         for reversals_data in data.get("refunds").auto_paging_iter():
             ApplicationFeeRefund.sync_from_stripe_data(reversals_data)
 
-    #! The webhook for applicationfee is fired on platform accounts but its field, charge, is on the connected account specified by account.
-    #! The other issue is that since the other webhook for charge is a connect webhook, its model field applicationfee is retrieved by the strip_account header of the connected account which is incorrect
+    #! The webhook for applicationfee is fired on platform accounts but its field, charge,
+    #! is on the connected account specified by account.
+    #! The other issue is that since the other webhook for charge is a connect webhook,
+    #! its model field applicationfee is retrieved by the stripe_account header of the connected account,
+    #! which is incorrect since that exists on the platform account
 
     #! The proposed solution is to override application_fee field retrieval by always setting stripe_account key to None
     #! And solution to ensure retrieval of ApplicationFee fields happen by account need to be thought of.
@@ -128,7 +131,10 @@ class ApplicationFee(StripeModel):
     # application_fee.created [evt_1J5V8IJSZQVUcJYgkasyxmha]
     # connect payment_intent.created [evt_1J5V8HQuFmP1Mw5utE7sIdme]
 
-    # This will run whenever application_fee is about to get saved. So even when charge.aplication_fee needs to be saved as well as the application_fee from the application_fee.created handelr
+    # This will run whenever application_fee is about to get saved.
+    # So even when charge.aplication_fee needs to be saved as well as
+    # the application_fee from the application_fee.created handler
+
     # def _attach_objects_hook(self, cls, data, current_ids=None):
     #     """
     #     Gets called by this object's create and sync methods just before save.
@@ -266,6 +272,8 @@ class ApplicationFee(StripeModel):
 
             stripe_account = None
 
+            print(f"About to retrieve balance transaction for APPLICATION FEE")
+
             # retrieve and sync BalanceTransaction
             balance_transaction_data = BalanceTransaction.stripe_class.retrieve(
                 id=cls._id_from_data(data.get("balance_transaction")),
@@ -319,6 +327,26 @@ class ApplicationFee(StripeModel):
                 pending_relations=pending_relations,
                 save=save,
                 stripe_account=cls._id_from_data(data.get("account")),
+            )
+
+        if data.get("object") == "charge" and field_name == "application_fee":
+
+            # stripe_account header will need to be retrieved from the corresponding Applicationfee.Account modelfield
+            stripe_account = ApplicationFee.objects.get(
+                id=data.get("application_fee")
+            ).account.id
+
+            print(f"CHARGE.APPLICATION_FEE  {stripe_account}")
+
+            # trying to retrieve charge.application_fee
+            return super()._get_or_create_from_stripe_object(
+                data=data,
+                field_name=field_name,
+                refetch=refetch,
+                current_ids=current_ids,
+                pending_relations=pending_relations,
+                save=save,
+                stripe_account=stripe_account,
             )
         if data.get("object") != "application_fee" and field_name == "application_fee":
             # SomeModel.application_fee
@@ -378,7 +406,7 @@ class ApplicationFeeRefund(StripeModel):
     )
 
     def __str__(self):
-        return self.fee
+        return str(self.fee)
 
     @classmethod
     def _api_create(cls, api_key=djstripe_settings.STRIPE_SECRET_KEY, **kwargs):
