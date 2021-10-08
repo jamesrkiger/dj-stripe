@@ -46,10 +46,10 @@ from . import (
     FAKE_PAYMENT_INTENT_I,
     FAKE_PAYMENT_METHOD_I,
     FAKE_PLAN,
+    FAKE_PLATFORM_ACCOUNT,
     FAKE_PRICE,
     FAKE_PRODUCT,
     FAKE_SOURCE,
-    FAKE_STANDARD_ACCOUNT,
     FAKE_SUBSCRIPTION,
     FAKE_SUBSCRIPTION_II,
     FAKE_UPCOMING_INVOICE,
@@ -62,6 +62,9 @@ from . import (
 
 class TestCustomer(AssertStripeFksMixin, TestCase):
     def setUp(self):
+        # create a Stripe Platform Account
+        self.account = FAKE_PLATFORM_ACCOUNT.create()
+
         self.user = get_user_model().objects.create_user(
             username="pydanny", email="pydanny@gmail.com"
         )
@@ -74,8 +77,6 @@ class TestCustomer(AssertStripeFksMixin, TestCase):
 
         self.customer.default_source = self.payment_method
         self.customer.save()
-
-        self.account = FAKE_STANDARD_ACCOUNT.create()
 
     def test___str__(self):
         self.assertEqual(str(self.customer), str(self.user))
@@ -97,15 +98,11 @@ class TestCustomer(AssertStripeFksMixin, TestCase):
         self.assertEqual(self.customer.pending_charges, 0)
 
     def test_customer_dashboard_url(self):
-        expected_url = "https://dashboard.stripe.com/test/customers/{}".format(
-            self.customer.id
-        )
+        expected_url = f"https://dashboard.stripe.com/test/customers/{self.customer.id}"
         self.assertEqual(self.customer.get_stripe_dashboard_url(), expected_url)
 
         self.customer.livemode = True
-        expected_url = "https://dashboard.stripe.com/customers/{}".format(
-            self.customer.id
-        )
+        expected_url = f"https://dashboard.stripe.com/customers/{self.customer.id}"
         self.assertEqual(self.customer.get_stripe_dashboard_url(), expected_url)
 
         unsaved_customer = Customer()
@@ -1040,12 +1037,12 @@ class TestCustomer(AssertStripeFksMixin, TestCase):
         self.customer.charge(
             amount=decimal.Decimal("10.00"),
             capture=True,
-            destination=FAKE_STANDARD_ACCOUNT["id"],
+            destination=FAKE_PLATFORM_ACCOUNT["id"],
         )
 
         _, kwargs = charge_create_mock.call_args
         self.assertEqual(kwargs["capture"], True)
-        self.assertEqual(kwargs["destination"], FAKE_STANDARD_ACCOUNT["id"])
+        self.assertEqual(kwargs["destination"], FAKE_PLATFORM_ACCOUNT["id"])
 
     @patch(
         "djstripe.models.Account.get_default_account",
@@ -1876,6 +1873,9 @@ class TestCustomer(AssertStripeFksMixin, TestCase):
 # These tests use Plan which is deprecated in favor of Price
 class TestCustomerLegacy(AssertStripeFksMixin, TestCase):
     def setUp(self):
+        # create a Stripe Platform Account
+        self.account = FAKE_PLATFORM_ACCOUNT.create()
+
         self.user = get_user_model().objects.create_user(
             username="pydanny", email="pydanny@gmail.com"
         )
@@ -1888,8 +1888,6 @@ class TestCustomerLegacy(AssertStripeFksMixin, TestCase):
 
         self.customer.default_source = self.payment_method
         self.customer.save()
-
-        self.account = FAKE_STANDARD_ACCOUNT.create()
 
     @patch(
         "stripe.Subscription.create",
