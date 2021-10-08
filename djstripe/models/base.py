@@ -272,11 +272,13 @@ class StripeModel(StripeBaseModel):
         """
         from .account import Account
 
+        # try to fetch by stripe_account. Also takes care of Stripe Connected Accounts
         stripe_account = cls._id_from_data(data.get("account"))
         if stripe_account:
             return Account._get_or_retrieve(id=stripe_account)
 
-        api_key = data.get("api_key", "")
+        # try to fetch by the given api_key. Otherwise the default api key.
+        api_key = data.get("api_key", djstripe_settings.STRIPE_SECRET_KEY)
         if api_key:
             return Account.get_or_retrieve_for_api_key(api_key)
 
