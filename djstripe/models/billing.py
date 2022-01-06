@@ -1514,8 +1514,10 @@ class Subscription(StripeModel):
                     "The `prorate` parameter to Subscription.update() is deprecated "
                     "by Stripe. Use `proration_behavior` instead.\n"
                     "Read more: "
-                    "https://stripe.com/docs/billing/subscriptions/prorations"
+                    "https://stripe.com/docs/billing/subscriptions/prorations",
+                    DeprecationWarning,
                 )
+
             else:
                 prorate = djstripe_settings.PRORATION_POLICY
 
