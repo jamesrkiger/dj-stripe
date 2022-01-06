@@ -1760,12 +1760,6 @@
     </li>
         </ul>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#djstripe.models.webhooks-functions">Functions</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#djstripe.models.webhooks.get_remote_ip">get_remote_ip()</a>
-    </li>
-        </ul>
-    </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../settings/">Settings</a>
@@ -32128,7 +32122,7 @@ request object.</p>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
         <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;(error decoding body)&quot;</span>
 
-    <span class="n">ip</span> <span class="o">=</span> <span class="n">get_remote_ip</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">djstripe_settings</span><span class="o">.</span><span class="n">GET_REMOTE_IP</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
@@ -32406,57 +32400,6 @@ and returns whether or not it matches the WebhookEventTrigger data.</p>
 
   </div>
 
-
-<h2 id="djstripe.models.webhooks-functions">Functions</h2>
-
-  <div class="doc doc-object doc-function">
-
-
-
-<h3 id="djstripe.models.webhooks.get_remote_ip" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">webhooks</span><span class="o">.</span><span class="n">get_remote_ip</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></code>
-
-
-</h3>
-
-    <div class="doc doc-contents ">
-
-      <p>Given the HTTPRequest object return the IP Address of the client</p>
-<p>:param request: client request
-:type request: HTTPRequest</p>
-<p>:Returns: the client ip address</p>
-
-        <details class="quote">
-          <summary>Source code in <code>djstripe/models/webhooks.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_remote_ip</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Given the HTTPRequest object return the IP Address of the client</span>
-
-<span class="sd">    :param request: client request</span>
-<span class="sd">    :type request: HTTPRequest</span>
-
-<span class="sd">    :Returns: the client ip address</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># HTTP_X_FORWARDED_FOR is relevant for django running behind a proxy</span>
-    <span class="n">x_forwarded_for</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">META</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HTTP_X_FORWARDED_FOR&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">x_forwarded_for</span><span class="p">:</span>
-        <span class="n">ip</span> <span class="o">=</span> <span class="n">x_forwarded_for</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">ip</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">META</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;REMOTE_ADDR&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">ip</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;Could not determine remote IP (missing REMOTE_ADDR). &quot;</span>
-            <span class="s2">&quot;This is likely an issue with your wsgi/server setup.&quot;</span>
-        <span class="p">)</span>
-        <span class="n">ip</span> <span class="o">=</span> <span class="s2">&quot;0.0.0.0&quot;</span>
-
-    <span class="k">return</span> <span class="n">ip</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
 
 
 
