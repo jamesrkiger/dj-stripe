@@ -130,8 +130,6 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#djstripe_foreign_key_to_field">DJSTRIPE_FOREIGN_KEY_TO_FIELD</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#djstripe_get_remote_ip-djstripesettingsdjstripe_settingsget_remote_ip">DJSTRIPE_GET_REMOTE_IP (=djstripe.settings.djstripe_settings.GET_REMOTE_IP)</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#djstripe_idempotency_key_callback-djstripesettingsdjstripe_settings_get_idempotency_key">DJSTRIPE_IDEMPOTENCY_KEY_CALLBACK (=djstripe.settings.djstripe_settings._get_idempotency_key)</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#djstripe_proration_policy-false">DJSTRIPE_PRORATION_POLICY (=False)</a>
@@ -259,17 +257,6 @@ longer be a primary key).</p>
 switch an older installation to "id", the easiest way is to wipe the djstripe db and
 sync again from scratch. This is obviously not ideal, and we will design a proper
 migration path before 3.0.</p>
-<h2 id="djstripe_get_remote_ip-djstripesettingsdjstripe_settingsget_remote_ip">DJSTRIPE_GET_REMOTE_IP (=djstripe.settings.djstripe_settings.GET_REMOTE_IP)</h2>
-<p><em>(Introduced in 2.6.0)</em></p>
-<p><code>DJSTRIPE_GET_REMOTE_IP</code> is a setting introduced in dj-stripe version 2.6.0. You are <code>not</code> required to set it unless you require more advanced strategies and/or filters to record the <code>client remote ip</code>. The <a href="../../djstripe/utils.py#_get_remote_ip">default function</a> can handle common django setups behind a proxy and relies on the HTTP header <code>HTTP_X_FORWARDED_FOR</code>. </p>
-<p><code>DJSTRIPE_GET_REMOTE_IP</code> should return a function with the following signature:</p>
-<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">GET_REMOTE_IP</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">HTTPRequest</span><span class="p">):</span>
-    <span class="c1"># do your magic</span>
-    <span class="k">return</span> <span class="s2">&quot;&lt;IP_ADDRESS&gt;&quot;</span>
-</code></pre></div>
-<p>The function MUST return a string suitably random for the object_type/action pair, and
-usable in the Stripe <code>Idempotency-Key</code> HTTP header. For more information, see the
-<a href="https://stripe.com/docs/upgrades">stripe documentation</a>.</p>
 <h2 id="djstripe_idempotency_key_callback-djstripesettingsdjstripe_settings_get_idempotency_key">DJSTRIPE_IDEMPOTENCY_KEY_CALLBACK (=djstripe.settings.djstripe_settings._get_idempotency_key)</h2>
 <p>A function which will return an idempotency key for a particular object_type and action
 pair. By default, this is set to a function which will create a
@@ -549,28 +536,6 @@ djstripe.settings.DjstripeSettings        </code>
 
 <h5 id="djstripe.settings.DjstripeSettings.DJSTRIPE_WEBHOOK_URL" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DjstripeSettings</span><span class="o">.</span><span class="n">DJSTRIPE_WEBHOOK_URL</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-property"><code>property</code></small>
-      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
-  </span>
-
-</h5>
-
-    <div class="doc doc-contents ">
-
-    </div>
-
-  </div>
-
-
-
-  <div class="doc doc-object doc-attribute">
-
-
-
-<h5 id="djstripe.settings.DjstripeSettings.GET_REMOTE_IP" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DjstripeSettings</span><span class="o">.</span><span class="n">GET_REMOTE_IP</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-property"><code>property</code></small>
