@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
 from .checks import validate_stripe_api_version
+from .utils import _get_remote_ip
 
 
 class DjstripeSettings:
@@ -72,6 +73,12 @@ class DjstripeSettings:
     def get_idempotency_key(self):
         return self.get_callback_function(
             "DJSTRIPE_IDEMPOTENCY_KEY_CALLBACK", self._get_idempotency_key
+        )
+
+    @property
+    def GET_REMOTE_IP(self):
+        return self.get_callback_function(
+            "DJSTRIPE_GET_REMOTE_IP", default=_get_remote_ip
         )
 
     @property
