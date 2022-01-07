@@ -772,6 +772,9 @@ class SourceTransaction(StripeModel):
         "to create a charge.",
     )
 
+    def __str__(self):
+        return f"Source Transaction status={self.status}, source={self.source.id}"
+
 
 class PaymentMethod(StripeModel):
     """
