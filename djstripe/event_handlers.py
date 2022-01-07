@@ -445,7 +445,14 @@ def _handle_crud_like_event(
         if event.parts[:2] == ["account", "external_account"] and stripe_account:
             kwargs["account"] = models.Account._get_or_retrieve(id=stripe_account)
 
-        data = target_cls(**kwargs).api_retrieve(stripe_account=stripe_account)
+        # skip retrieving data for SourceTransaction because
+        # it doesn't support retrieve operation
+        # indirect retrieval via Source will not work as SourceTransaction will not be attached to any Customer Object
+        if target_cls is not models.SourceTransaction:
+            data = target_cls(**kwargs).api_retrieve(stripe_account=stripe_account)
+        else:
+            data = data.get("object")
+
         # create or update the object from the retrieved Stripe Data
         obj = target_cls.sync_from_stripe_data(data)
 
