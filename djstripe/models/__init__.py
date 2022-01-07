@@ -46,6 +46,7 @@ from .payment_methods import (
     DjstripePaymentMethod,
     PaymentMethod,
     Source,
+    SourceTransaction,
 )
 from .sigma import ScheduledQueryRun
 from .webhooks import WebhookEventTrigger
@@ -83,6 +84,7 @@ __all__ = [
     "SetupIntent",
     "Session",
     "Source",
+    "SourceTransaction",
     "StripeModel",
     "Subscription",
     "SubscriptionItem",
