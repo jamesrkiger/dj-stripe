@@ -1826,6 +1826,10 @@ FAKE_USAGE_RECORD_SUMMARY = UsageRecordSummaryDict(
 )
 
 
+class WebhookEndpointDict(StripeItem):
+    pass
+
+
 FAKE_ACCOUNT = {
     "id": "acct_1032D82eZvKYlo2C",
     "object": "account",
