@@ -57,6 +57,7 @@ pytest = "^6.2.4"
 pytest-django = "^4.3.0"
 mypy = "^0.920"
 tox = ">3.2.0"
+debugpy = "^1.5.1"
 
 [tool.poetry.extras]
 docs = ["mkdocs", "mkdocstrings", "mkdocs-material", "mkdocs-autorefs", "psycopg2", "mike"]
