@@ -76,7 +76,7 @@ class BaseHasSourceListFilter(admin.SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         source:
-        https://docs.djangoproject.com/en/1.10/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
+        https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
         """
         return (("yes", "Has a source"), ("no", "Has no source"))
 
@@ -85,7 +85,7 @@ class BaseHasSourceListFilter(admin.SimpleListFilter):
         Return the filtered queryset based on the value provided in the query string.
 
         source:
-        https://docs.djangoproject.com/en/1.10/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
+        https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
         """
         filter_args = {self._filter_arg_key: None}
 
@@ -118,7 +118,7 @@ class CustomerSubscriptionStatusListFilter(admin.SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         source:
-        https://docs.djangoproject.com/en/1.10/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
+        https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
         """
         statuses = [
             [x, x.replace("_", " ").title()]
@@ -134,7 +134,7 @@ class CustomerSubscriptionStatusListFilter(admin.SimpleListFilter):
         Return the filtered queryset based on the value provided in the query string.
 
         source:
-        https://docs.djangoproject.com/en/1.10/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
+        https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter
         """
         if self.value() is None:
             return queryset.all()

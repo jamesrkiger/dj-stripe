@@ -234,7 +234,6 @@ class DjstripeSettings:
         """
         model_name = self.get_subscriber_model_string()
 
-        # Attempt a Django 1.7 app lookup
         try:
             subscriber_model = django_apps.get_model(model_name)
         except ValueError:
