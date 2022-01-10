@@ -1830,6 +1830,11 @@ class WebhookEndpointDict(StripeItem):
     pass
 
 
+FAKE_WEBHOOK_ENDPOINT_1 = WebhookEndpointDict(
+    load_fixture("webhook_endpoint_fake0001.json")
+)
+
+
 FAKE_ACCOUNT = {
     "id": "acct_1032D82eZvKYlo2C",
     "object": "account",
