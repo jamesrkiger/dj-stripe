@@ -81,6 +81,8 @@
                 </ul>
                 <p class="caption"><span class="caption-text">Release notes</span></p>
                 <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../history/2_6_0/">dj-stripe 2.6 release notes</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../history/2_5_0/">dj-stripe 2.5 release notes</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../history/2_4_x/">dj-stripe 2.4.1 release notes</a>
@@ -200,7 +202,7 @@ Elements with stripe js v3.</p>
 compliance (3D secure etc).</p>
 <h3 id="charges-using-stripecreatesource"><a href="https://stripe.com/docs/js/tokens_sources/create_source">Charges using stripe.createSource()</a></h3>
 <p>This creates Source objects within Stripe, and can be used for various different methods of payment (including, but not limited to cards), but isn't SCA compliant.</p>
-<p>The <a href="https://stripe.com/docs/payments/accept-a-payment-charges?platform=web">Card Elements Quickstart JS</a> example can be used, except use <code>stripe.createSource</code> instead of <code>stripe.createToken</code> and the <code>result.source</code> instead of <code>result.token</code>. <a href="../reference/project/#tests.apps.example.views.PurchaseSubscriptionView"><code>Checkout a working example of this</code></a></p>
+<p>The <a href="https://stripe.com/docs/payments/accept-a-payment-charges?platform=web">Card Elements Quickstart JS</a> example can be used, except use <code>stripe.createSource</code> instead of <code>stripe.createToken</code> and the <code>result.source</code> instead of <code>result.token</code>. [<code>Checkout a working example of this</code>][tests.apps.example.views.PurchaseSubscriptionView]</p>
 <h3 id="charges-using-stripecreatetoken">Charges using stripe.createToken()</h3>
 <p>This predates <code>stripe.createSource</code>, and creates legacy Card objects within Stripe, which have some compatibility issues with Payment Methods.</p>
 <p>If you're using <code>stripe.createToken</code>, see if you can upgrade to
@@ -216,7 +218,7 @@ compliance (3D secure etc).</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../history/2_5_0/" class="btn btn-neutral float-right" title="dj-stripe 2.5 release notes">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../history/2_6_0/" class="btn btn-neutral float-right" title="dj-stripe 2.6 release notes">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../api_versions/" class="btn btn-neutral" title="A note on Stripe API Versions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -252,7 +254,7 @@ compliance (3D secure etc).</p>
       <span><a href="../api_versions/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../history/2_5_0/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../history/2_6_0/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

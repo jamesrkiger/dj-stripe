@@ -69,6 +69,8 @@
                 </ul>
                 <p class="caption"><span class="caption-text">Release notes</span></p>
                 <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../history/2_6_0/">dj-stripe 2.6 release notes</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../../history/2_5_0/">dj-stripe 2.5 release notes</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../../history/2_4_x/">dj-stripe 2.4.1 release notes</a>
@@ -142,7 +144,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#djstripe_subscriber_model_migration_dependency-__first__">DJSTRIPE_SUBSCRIBER_MODEL_MIGRATION_DEPENDENCY (="__first__")</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#djstripe_use_native_jsonfield-false">DJSTRIPE_USE_NATIVE_JSONFIELD (=False)</a>
+    <li class="toctree-l2"><a class="reference internal" href="#djstripe_use_native_jsonfield-true">DJSTRIPE_USE_NATIVE_JSONFIELD (=True)</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#djstripe_webhook_url-rwebhook">DJSTRIPE_WEBHOOK_URL (=r"^webhook/$")</a>
     </li>
@@ -271,6 +273,10 @@ get.</p>
 usable in the Stripe <code>Idempotency-Key</code> HTTP header. For more information, see the
 <a href="https://stripe.com/docs/upgrades">stripe documentation</a>.</p>
 <h2 id="djstripe_proration_policy-false">DJSTRIPE_PRORATION_POLICY (=False)</h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This setting is deprecated and will be removed in dj-stripe 2.8.</p>
+</div>
 <p>By default, plans are not prorated in dj-stripe. Concretely, this is how this
 translates:</p>
 <ol>
@@ -347,18 +353,15 @@ defines an email address to use.</p>
 <p>If the model referenced in DJSTRIPE_SUBSCRIBER_MODEL is not created in the <code>__first__</code>
 migration of an app you can specify the migration name to depend on here. For example:
 "0003_here_the_subscriber_model_was_added"</p>
-<h2 id="djstripe_use_native_jsonfield-false">DJSTRIPE_USE_NATIVE_JSONFIELD (=False)</h2>
-<p>Setting this to <code>True</code> will make the various dj-stripe JSON fields use the native Django
-<code>JSONField</code> model instead of the <code>jsonfield</code> library.</p>
-<p><strong>On Django 3.0 and older</strong>: The <code>django.contrib.postgres.fields.JSONField</code> field will
-always be used. A Postgres backend is required (uses
-<a href="https://www.postgresql.org/docs/9.6/static/functions-json.html">jsonb</a> internally).</p>
-<p><strong>On Django 3.1 and newer</strong>: <code>django.models.JSONField</code> will always be used. This field
-type is compatible with all database backends.</p>
-<p>Setting this to True is highly recommended. However, if you have already migrated with
-the old fields, migrating to the native JSONField has to be done manually and is not
-currently supported by dj-stripe. We will eventaully move to exclusively using the
-native JSONField.</p>
+<h2 id="djstripe_use_native_jsonfield-true">DJSTRIPE_USE_NATIVE_JSONFIELD (=True)</h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This setting is deprecated and will be removed in dj-stripe 2.8.</p>
+</div>
+<p>When set to <code>False</code>, forces dj-stripe to use the <code>jsonfield</code> library for <code>JSONField</code>.</p>
+<p>Leaving this set to True is highly recommended. However, if you have already migrated
+with the old fields, migrating to the native JSONField has to be done manually and is not
+currently natively supported by dj-stripe.</p>
 <p>The native Django JSONField uses the postgres <code>jsonb</code> column type, which efficiently
 stores JSON and can be queried far moreconveniently. Django also supports <a href="https://docs.djangoproject.com/en/3.1/topics/db/queries/#querying-jsonfield">querying
 JSONField</a>
@@ -494,28 +497,6 @@ djstripe.settings.DjstripeSettings        </code>
 
 
 
-<h5 id="djstripe.settings.DjstripeSettings.CANCELLATION_AT_PERIOD_END" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DjstripeSettings</span><span class="o">.</span><span class="n">CANCELLATION_AT_PERIOD_END</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-property"><code>property</code></small>
-      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
-  </span>
-
-</h5>
-
-    <div class="doc doc-contents ">
-
-    </div>
-
-  </div>
-
-
-
-  <div class="doc doc-object doc-attribute">
-
-
-
 <h5 id="djstripe.settings.DjstripeSettings.DEFAULT_STRIPE_API_VERSION" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DjstripeSettings</span><span class="o">.</span><span class="n">DEFAULT_STRIPE_API_VERSION</span></code>
 
@@ -601,7 +582,7 @@ djstripe.settings.DjstripeSettings        </code>
 
 
 <h5 id="djstripe.settings.DjstripeSettings.STRIPE_API_VERSION" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DjstripeSettings</span><span class="o">.</span><span class="n">STRIPE_API_VERSION</span></code>
+<code class="highlight language-python"><span class="n">djstripe</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">DjstripeSettings</span><span class="o">.</span><span class="n">STRIPE_API_VERSION</span><span class="p">:</span> <span class="nb">str</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-property"><code>property</code></small>
@@ -1117,7 +1098,7 @@ a failed import causing ImportError to be raised.</p>
 
         <details class="quote">
           <summary>Source code in <code>djstripe/settings.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_default_api_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">livemode</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_default_api_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">livemode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the default API key for a value of `livemode`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1228,9 +1209,9 @@ DJSTRIPE_SUBSCRIBER_MODEL setting.</p>
 
         <details class="quote">
           <summary>Source code in <code>djstripe/settings.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_subscriber_model_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_subscriber_model_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Get the configured subscriber model as a module path string.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;DJSTRIPE_SUBSCRIBER_MODEL&quot;</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">AUTH_USER_MODEL</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;DJSTRIPE_SUBSCRIBER_MODEL&quot;</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">AUTH_USER_MODEL</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 </code></pre></div>
         </details>
     </div>
@@ -1303,6 +1284,9 @@ DJSTRIPE_SUBSCRIBER_MODEL setting.</p>
     </div>
 
   </div>
+
+<p>selection:
+filters: - "!^<em>[^</em>]"</p>
               
             </div>
           </div>
