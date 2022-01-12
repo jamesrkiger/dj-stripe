@@ -1166,7 +1166,7 @@ FAKE_SUBSCRIPTION_SCHEDULE = {
     "completed_at": None,
     "created": 1605056974,
     "current_phase": None,
-    "customer": "cus_4UbFSo9tl62jqj",  # FAKE_CUSTOMER_II
+    "customer": "cus_6lsBvm5rJ0zyHc",  # "cus_4UbFSo9tl62jqj",  # FAKE_CUSTOMER_II
     "default_settings": {
         "billing_cycle_anchor": "automatic",
         "billing_thresholds": None,
@@ -1212,7 +1212,7 @@ FAKE_SUBSCRIPTION_SCHEDULE = {
     "released_subscription": None,
     "renewal_interval": None,
     "status": "not_started",
-    "subscription": None,
+    "subscription": FAKE_SUBSCRIPTION["id"],
 }
 
 
