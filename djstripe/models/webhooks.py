@@ -193,7 +193,7 @@ class WebhookEventTrigger(models.Model):
         if webhook_endpoint is None:
             stripe_account = StripeModel._find_owner_account(data=data)
             secret = djstripe_settings.WEBHOOK_SECRET
-        else:
+        elif webhook_endpoint is not None and stripe_account is None:
             stripe_account = webhook_endpoint.djstripe_owner_account
             secret = webhook_endpoint.secret
 
