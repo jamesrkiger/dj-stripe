@@ -317,6 +317,8 @@ class StripeModel(StripeBaseModel):
             for which this request is being made.
         :return: All the members from the input, translated, mutated, etc
         """
+        from .account import Account
+
         manipulated_data = cls._manipulate_stripe_object_hook(data)
 
         if not cls.is_valid_object(data):
@@ -382,7 +384,10 @@ class StripeModel(StripeBaseModel):
 
         # For all objects other than the account object itself, get the API key
         # attached to the request, and get the matching Account for that key.
-        owner_account = cls._find_owner_account(data, api_key=api_key)
+        if stripe_account:
+            owner_account = Account._get_or_retrieve(id=stripe_account)
+        else:
+            owner_account = cls._find_owner_account(data, api_key=api_key)
         if owner_account:
             result["djstripe_owner_account"] = owner_account
 
