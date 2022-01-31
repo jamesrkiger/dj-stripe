@@ -1511,7 +1511,7 @@ class Event(StripeModel):
             self.request_id = request_obj or ""
 
     @classmethod
-    def process(cls, data):
+    def process(cls, data, stripe_account=None):
         qs = cls.objects.filter(id=data["id"])
         if qs.exists():
             return qs.first()
@@ -1521,7 +1521,7 @@ class Event(StripeModel):
         # next time the webhook fires.
         with transaction.atomic():
             # process the event and create an Event Object
-            ret = cls._create_from_stripe_object(data)
+            ret = cls._create_from_stripe_object(data, stripe_account=stripe_account)
             ret.invoke_webhook_handlers()
             return ret
 
