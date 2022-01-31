@@ -97,6 +97,7 @@ class Coupon(StripeModel):
     """
 
     stripe_class = stripe.Coupon
+    stripe_dashboard_item_name = "coupons"
 
     id = StripeIdField(max_length=500)
     amount_off = StripeDecimalCurrencyAmountField(
@@ -155,13 +156,14 @@ class Coupon(StripeModel):
         default=0,
         help_text="Number of times this coupon has been applied to a customer.",
     )
-    # valid = models.BooleanField(editable=False)
+    valid = models.BooleanField(
+        help_text="Taking account of the above properties, whether this coupon can still be applied to a customer.",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         unique_together = ("id", "livemode")
-
-    stripe_class = stripe.Coupon
-    stripe_dashboard_item_name = "coupons"
 
     def __str__(self):
         if self.name:
